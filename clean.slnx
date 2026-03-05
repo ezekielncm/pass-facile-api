@@ -1,0 +1,24 @@
+<Solution>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+  <Project Path="src/Api/Api.csproj" Id="8de9d025-de0b-43cf-8a8b-ac050f91ddbe">
+    <BuildDependency Project="src/Application/Application.csproj" />
+  </Project>
+  <Project Path="src/Application/Application.csproj" Id="69fe0c9a-80dc-4550-8728-da6a075ead9b">
+    <BuildDependency Project="src/Domain/Domain.csproj" />
+  </Project>
+  <Project Path="src/Domain/Domain.csproj" Id="02f797ca-82f0-40ce-89eb-b54c5b31d73b" />
+  <Project Path="src/Infrastructure/Infrastructure.csproj" Id="bd52865a-8827-46ec-a6d3-7f4df57ada78">
+    <BuildDependency Project="src/Application/Application.csproj" />
+    <BuildDependency Project="src/Domain/Domain.csproj" />
+  </Project>
+  <Project Path="tests/ApiIntegrationTests/ApiIntegrationTests.csproj" Id="832bdefb-246a-4298-8035-ffccccc42219" />
+  <Project Path="tests/ApplicationUnitTests/ApplicationUnitTests.csproj" Id="7ccfde6a-d269-4231-a4e7-62de0be27e57">
+    <BuildDependency Project="src/Application/Application.csproj" />
+  </Project>
+  <Project Path="tests/DomainUnitTest/DomainUnitTests.csproj" Id="16cb8264-7282-41a8-bc36-3241d49433af">
+    <BuildDependency Project="src/Domain/Domain.csproj" />
+  </Project>
+  <Project Path="tests/InfrastructureIntegrationTests/InfrastructureIntegrationTests.csproj" Id="c685ba62-a37a-432e-86c0-cde52acfb1aa" />
+</Solution>

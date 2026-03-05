@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Auth\Commands\Login\" />
+    <Folder Include="Auth\Commands\Register\" />
+    <Folder Include="Auth\DTOs\" />
+  </ItemGroup>
+
+</Project>
