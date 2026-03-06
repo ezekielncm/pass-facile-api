@@ -4,7 +4,8 @@ using System.Text;
 
 namespace Application.Common.Interfaces.Auth
 {
-    internal class IJwtTokenGenerator
+    public interface IJwtTokenGenerator
     {
+        string GenerateToken(Guid userId, string email, IEnumerable<string> roles);
     }
 }

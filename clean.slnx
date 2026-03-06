@@ -4,6 +4,7 @@
   </Project>
   <Project Path="src/Api/Api.csproj" Id="8de9d025-de0b-43cf-8a8b-ac050f91ddbe">
     <BuildDependency Project="src/Application/Application.csproj" />
+    <BuildDependency Project="src/Infrastructure/Infrastructure.csproj" />
   </Project>
   <Project Path="src/Application/Application.csproj" Id="69fe0c9a-80dc-4550-8728-da6a075ead9b">
     <BuildDependency Project="src/Domain/Domain.csproj" />

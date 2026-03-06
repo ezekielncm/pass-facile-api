@@ -1,0 +1,10 @@
+#See https://aka.ms/overrideVSDockerComposeConfiguration to understand how Visual Studio uses this override file.
+
+#services:
+  #api:
+    #labels:
+      #com.microsoft.visualstudio.debuggee.program: /app/Api
+      #com.microsoft.visualstudio.debuggee.arguments: "\"/app/Api.dll\""
+      #com.microsoft.visualstudio.debuggee.workingdirectory: "/app"
+      #com.microsoft.visualstudio.debuggee.killprogram: "/bin/sh -c \"if PID=$$(pidof Api); then kill $$PID; fi\""
+      #com.microsoft.visual-studio.project-name: "Api"

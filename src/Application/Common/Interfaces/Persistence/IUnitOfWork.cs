@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text.Json;
 
 namespace Application.Common.Interfaces.Persistence
 {
-    internal interface IUnitOfWork
+    public interface IUnitOfWork
     {
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        Task BeginTransactionAsync(CancellationToken cancellationToken = default);
+        Task CommitTransactionAsync(CancellationToken cancellationToken = default);
+        Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
     }
 }
