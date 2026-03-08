@@ -8,14 +8,14 @@
         /// <summary>
         /// Gets the unique identifier of the current user.
         /// </summary>
-        Guid? UserId { get; }
+        string? UserId { get; }
 
         /// <summary>
         /// Gets the username of the current user.
         /// </summary>
-        string? UserName { get; }
+        //string? UserName { get; }
 
-        string? Email { get; }
+        //string? Email { get; }
 
         /// <summary>
         /// Gets a value indicating whether the user is authenticated.
