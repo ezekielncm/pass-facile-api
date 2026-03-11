@@ -1,9 +1,9 @@
 ﻿using Application.Common.Interfaces.Auth;
 using Application.Common.Interfaces.Services;
-using Domain.Aggregates.User;
 using Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,17 +16,20 @@ namespace Infrastructure.Auth
         private readonly IOtpService _otpService;
        // private readonly ISmsService _smsService;
         private readonly JwtTokenGenerator _jwtService;
+        private readonly ILogger<AuthService> _logger;
 
         public AuthService(
             UserManager<AppUser> userManager,
             IOtpService otpService,
             //ISmsService smsService,
-            JwtTokenGenerator jwtService)
+            JwtTokenGenerator jwtService,
+            ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _otpService = otpService;
            // _smsService = smsService;
             _jwtService = jwtService;
+            _logger = logger;
         }
 
         // Étape 1 : demande d'OTP
@@ -38,17 +41,18 @@ namespace Infrastructure.Auth
 
             if (user is null)
             {
+                _logger.LogInformation("new user{phoneNumber}", phoneNumber);
+                
                 user = new AppUser
                 {
                     UserName = phoneNumber,
-                    PhoneNumber = phoneNumber,
-                    PhoneNumberConfirmed = false,
+                    PhoneNumber = phoneNumber
                 };
                 var result = await _userManager.CreateAsync(user);
                 if (!result.Succeeded)
                     return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
 
-                await _userManager.AddToRoleAsync(user, "user"); // rôle par défaut
+                //await _userManager.AddToRoleAsync(user,"User"); // rôle par défaut
             }
 
             if (!user.IsActive)
@@ -59,7 +63,7 @@ namespace Infrastructure.Auth
             // En production → SMS. En dev → log.
             //await _smsService.SendAsync(phoneNumber, $"Your verification code: {otp}. Valid 5 minutes.");
 
-            return (true, null);
+            return (true, otp);
         }
 
         // Étape 2 : vérification OTP → JWT

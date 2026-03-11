@@ -29,6 +29,7 @@ namespace Infrastructure
 
             services.AddIdentity<AppUser, AppRole>(options =>
             {
+
                 options.User.RequireUniqueEmail = false; // pas d'email !
                 options.Password.RequiredLength = 0;     // pas de password
                 options.Password.RequireDigit = false;
@@ -50,6 +51,7 @@ namespace Infrastructure
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IUnitOfWork,UnitOfWork>();
             services.AddScoped<IEventPublisher,EventPublisher>();
+            services.AddScoped<IUserRepository,EfCoreUserRepository>();
 
             return services;
         }

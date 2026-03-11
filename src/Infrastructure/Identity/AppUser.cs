@@ -10,7 +10,6 @@ namespace Infrastructure.Identity
     /// </summary>
     public sealed class AppUser : IdentityUser<Guid>
     {
-        public string PhoneNumber { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLoginAt { get; set; }
         public bool IsActive { get; set; } = true;

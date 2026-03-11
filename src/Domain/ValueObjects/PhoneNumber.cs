@@ -9,6 +9,7 @@ public sealed record PhoneNumber
     public string Value { get; }
     public string CountryCode { get; }
     public string NationalNumber { get; }
+    public PhoneNumber() { }
 
     public PhoneNumber(string value)
     {

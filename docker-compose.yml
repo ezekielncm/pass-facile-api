@@ -18,6 +18,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pf-pgadmin
@@ -33,6 +34,7 @@ services:
       - pf-network
     depends_on:
       - postgres
+
   api:
     image: ${DOCKER_REGISTRY-}api
     build:
@@ -40,6 +42,7 @@ services:
       dockerfile: src/Api/Dockerfile
     networks:
      - pf-network
+
 networks:
   pf-network:
     driver: bridge

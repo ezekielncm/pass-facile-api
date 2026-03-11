@@ -17,6 +17,7 @@ namespace Domain.Aggregates.User
         public UserProfile Profile { get; private set; }
         private readonly List<Role> _roles = new();
         //public bool isActive { get; private set; } = false;
+        private User() { }
         public void AddRole(Role role)
         {
             if (!_roles.Contains(role))
