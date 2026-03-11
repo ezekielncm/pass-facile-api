@@ -1,0 +1,10 @@
+﻿namespace Api.Contracts.Users
+{
+    public sealed record ProfilePutRequest
+    {
+        public required string DisplayName { get; init; }
+        public required string Bio { get; init; }
+        public required string LogoUrl { get; init; }
+        public required string BannerUrl { get; init; }
+    }
+}

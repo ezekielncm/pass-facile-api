@@ -5,23 +5,23 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Twilio.Base;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Auth
 {
-    public class JwtTokenGenerator
+    public sealed class JwtTokenGenerator
     {
         private readonly JwtSettings _settings;
-        public JwtTokenGenerator(IOptions<JwtSettings> s) => _settings = s.Value;
+        public JwtTokenGenerator(IOptions<JwtSettings> settings) => _settings = settings.Value;
 
         public string GenerateToken(AppUser user, IList<string> roles)
         {
             var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub,         user.Id),
+            new(JwtRegisteredClaimNames.Sub,         user.UserId.ToString()),
             new(JwtRegisteredClaimNames.Jti,         Guid.NewGuid().ToString()),
             new(ClaimTypes.MobilePhone,              user.PhoneNumber!),
-            new("fullName", $"{user.FirstName} {user.LastName}"),
+            new("PhoneNumber", $"{user.PhoneNumber}"),
         };
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
@@ -32,7 +32,7 @@ namespace Infrastructure.Auth
                 issuer: _settings.Issuer,
                 audience: _settings.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes),
+                expires: DateTime.UtcNow.AddMinutes(_settings.ExpirationMinutes),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

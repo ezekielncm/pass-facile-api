@@ -1,4 +1,3 @@
-using Api.Middleware;
 using Api.MiddleWares;
 using Application;
 using Infrastructure;
@@ -14,18 +13,19 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ============================================================================
-// SERILOG CONFIGURATION
-// ============================================================================
+//============================================================================
+//SERILOG CONFIGURATION
+//============================================================================
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .WriteTo.Console()
     .WriteTo.File("logs/-.txt", rollingInterval: RollingInterval.Day)
-    .WriteTo.Seq(builder.Configuration["Seq:Url"] ?? "http://localhost:5341")
+    //.WriteTo.Seq(builder.Configuration["Seq:Url"] ?? "http://localhost:5341")
     .CreateLogger();
 
 builder.Host.UseSerilog();
+
 
 // ==============================================================================
 // ADD SERVICES TO CONTAINER
@@ -37,11 +37,11 @@ builder.Services.AddApplication();
 // Infrastructure Layer
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// JSON Serializer Options (Minimal API source generation)
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-});
+//// JSON Serializer Options (Minimal API source generation)
+//builder.Services.ConfigureHttpJsonOptions(options =>
+//{
+//    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+//});
 
 // JWT Authentication configuration
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()!
@@ -55,6 +55,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    var key = builder.Configuration["JwtSettings:SecretKey"];
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -64,7 +65,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings.Issuer,
         ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+            Encoding.UTF8.GetBytes(key)),
         ClockSkew = TimeSpan.Zero
     };
 });
@@ -142,16 +143,18 @@ builder.Services.AddHealthChecks()
 // ==============================================================================
 var app = builder.Build();
 
-// Authentication & Authorization  ← doit être avant les middlewares métier
-app.UseAuthentication();
-app.UseAuthorization();
-
 // ==============================================================================
 // MIDDLEWARE PIPELINE
 // ==============================================================================
 
 // Global Exception Handler
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
+
+// Authentication & Authorization  ← doit être avant les middlewares métier
+app.UseAuthentication();
+app.UseAuthorization();
+
 
 // Swagger (Development only)
 if (app.Environment.IsDevelopment())

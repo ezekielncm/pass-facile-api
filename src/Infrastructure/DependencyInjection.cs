@@ -1,7 +1,57 @@
-﻿namespace Infrastructure
-{
-    public class DependencyInjection
-    {
+﻿using Application.Common.Interfaces.Auth;
+using Application.Common.Interfaces.Services;
+using Infrastructure.Auth;
+using Infrastructure.Identity;
+using Infrastructure.Persistences;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Application.Common.Interfaces.Persistence;
+using Application.Common.Interfaces.Messaging;
+using Infrastructure.Services;
 
+namespace Infrastructure
+{
+    public static class DependencyInjection
+    {
+        public static IServiceCollection AddInfrastructure(
+            this IServiceCollection services, IConfiguration config)
+        {
+            services.AddDbContext<AppDbContext>(o =>
+                o.UseNpgsql(config.GetConnectionString("DefaultConnection"),
+                b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
+
+            services.AddDbContext<IDbContext>(o =>
+                o.UseNpgsql(config.GetConnectionString("IdentityConnection"),
+                b => b.MigrationsAssembly(typeof(IDbContext).Assembly.FullName)));
+
+            services.AddIdentity<AppUser, AppRole>(options =>
+            {
+                options.User.RequireUniqueEmail = false; // pas d'email !
+                options.Password.RequiredLength = 0;     // pas de password
+                options.Password.RequireDigit = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+            })
+                .AddEntityFrameworkStores<IDbContext>()
+                .AddDefaultTokenProviders();
+
+            services.Configure<JwtSettings>(config.GetSection("JwtSettings"));
+            //services.Configure<TwilioSettings>(config.GetSection("Twilio"));
+
+            services.AddMemoryCache();
+            services.AddScoped<JwtTokenGenerator>();
+            services.AddScoped<IOtpService, OtpService>();
+            //services.AddScoped<ISmsService, TwilioSmsService>();
+            services.AddScoped<IAuth, AuthService>();
+            services.AddHttpContextAccessor();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IUnitOfWork,UnitOfWork>();
+            services.AddScoped<IEventPublisher,EventPublisher>();
+
+            return services;
+        }
     }
 }

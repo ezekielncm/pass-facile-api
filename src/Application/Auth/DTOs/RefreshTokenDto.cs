@@ -5,11 +5,12 @@ using System.Text;
 
 namespace Application.Auth.DTOs
 {
-    public sealed record VerifyOtpDto(
-        bool Success,
+    public sealed record RefreshTokenDto(
+        bool? Success,
         string? AccessToken,
-        //string? RefreshToken,
-        //User? User,
+        string? RefreshToken,
         string? Error
-        );
+        )
+    {
+    }
 }

@@ -1,6 +1,9 @@
 ﻿using Application.Common.Interfaces.Auth;
 using Application.Common.Interfaces.Services;
+using Domain.Aggregates.User;
 using Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,18 +14,18 @@ namespace Infrastructure.Auth
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IOtpService _otpService;
-        private readonly ISmsService _smsService;
-        private readonly JwtTokenService _jwtService;
+       // private readonly ISmsService _smsService;
+        private readonly JwtTokenGenerator _jwtService;
 
         public AuthService(
             UserManager<AppUser> userManager,
             IOtpService otpService,
-            ISmsService smsService,
-            JwtTokenService jwtService)
+            //ISmsService smsService,
+            JwtTokenGenerator jwtService)
         {
             _userManager = userManager;
             _otpService = otpService;
-            _smsService = smsService;
+           // _smsService = smsService;
             _jwtService = jwtService;
         }
 
@@ -45,7 +48,7 @@ namespace Infrastructure.Auth
                 if (!result.Succeeded)
                     return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
 
-                await _userManager.AddToRoleAsync(user, "Doctor"); // rôle par défaut
+                await _userManager.AddToRoleAsync(user, "user"); // rôle par défaut
             }
 
             if (!user.IsActive)
@@ -54,7 +57,7 @@ namespace Infrastructure.Auth
             var otp = await _otpService.GenerateAndStoreOtpAsync(phoneNumber);
 
             // En production → SMS. En dev → log.
-            await _smsService.SendAsync(phoneNumber, $"Your verification code: {otp}. Valid 5 minutes.");
+            //await _smsService.SendAsync(phoneNumber, $"Your verification code: {otp}. Valid 5 minutes.");
 
             return (true, null);
         }

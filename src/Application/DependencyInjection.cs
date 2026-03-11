@@ -21,7 +21,7 @@ namespace Application
             });
 
             // FluentValidation
-            services.AddValidatorsFromAssembly(assembly);
+            //services.AddValidatorsFromAssembly(assembly);
 
             return services;
         }

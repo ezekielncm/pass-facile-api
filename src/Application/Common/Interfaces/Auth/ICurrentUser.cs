@@ -20,12 +20,12 @@
         /// <summary>
         /// Gets a value indicating whether the user is authenticated.
         /// </summary>
-        bool IsAuthenticated { get; }
-        bool IsInRole(string role);
+        //bool IsAuthenticated { get; }
+        //bool IsInRole(string role);
 
         /// <summary>
         /// Gets the roles assigned to the current user.
         /// </summary>
-        IEnumerable<string> Roles { get; }
+        //IEnumerable<string> Roles { get; }
     }
 }

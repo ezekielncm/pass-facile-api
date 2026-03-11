@@ -1,11 +1,11 @@
 @Api_HostAddress = http://localhost:5045
 
-GET {{Api_HostAddress}}/todos/
+GET {{Api_HostAddress}}/
 Accept: application/json
 
 ###
 
-GET {{Api_HostAddress}}/todos/1
+GET {{Api_HostAddress}}/
 Accept: application/json
 
 ###
