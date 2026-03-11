@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Application.Common.Interfaces.Persistence;
 using Application.Common.Interfaces.Messaging;
 using Infrastructure.Services;
-
+using Microsoft.Extensions.Http;
 namespace Infrastructure
 {
     public static class DependencyInjection
@@ -40,6 +40,7 @@ namespace Infrastructure
                 .AddDefaultTokenProviders();
 
             services.Configure<JwtSettings>(config.GetSection("JwtSettings"));
+            services.Configure<IkkodiSettings>(config.GetSection("ExternalApis:Ikkodi"));
             //services.Configure<TwilioSettings>(config.GetSection("Twilio"));
 
             services.AddMemoryCache();
@@ -52,6 +53,8 @@ namespace Infrastructure
             services.AddScoped<IUnitOfWork,UnitOfWork>();
             services.AddScoped<IEventPublisher,EventPublisher>();
             services.AddScoped<IUserRepository,EfCoreUserRepository>();
+
+            services.AddHttpClient<IkkodiClient>();
 
             return services;
         }

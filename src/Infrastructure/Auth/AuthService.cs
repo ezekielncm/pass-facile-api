@@ -17,12 +17,14 @@ namespace Infrastructure.Auth
        // private readonly ISmsService _smsService;
         private readonly JwtTokenGenerator _jwtService;
         private readonly ILogger<AuthService> _logger;
+        private readonly IkkodiClient _client;
 
         public AuthService(
             UserManager<AppUser> userManager,
             IOtpService otpService,
             //ISmsService smsService,
             JwtTokenGenerator jwtService,
+            IkkodiClient client,
             ILogger<AuthService> logger)
         {
             _userManager = userManager;
@@ -30,6 +32,7 @@ namespace Infrastructure.Auth
            // _smsService = smsService;
             _jwtService = jwtService;
             _logger = logger;
+            _client = client;
         }
 
         // Étape 1 : demande d'OTP
@@ -62,6 +65,7 @@ namespace Infrastructure.Auth
 
             // En production → SMS. En dev → log.
             //await _smsService.SendAsync(phoneNumber, $"Your verification code: {otp}. Valid 5 minutes.");
+            await _client.SendSmsAsync(phoneNumber, $"Your verification code: {otp}. Valid 5 minutes.");
 
             return (true, otp);
         }
