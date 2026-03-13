@@ -44,7 +44,7 @@ RUN apt-get update \
 USER app
 
 # Cette phase est utilisée en production ou lors de l’exécution à partir de VS en mode normal (par défaut quand la configuration de débogage n’est pas utilisée)
-FROM ${FINAL_BASE_IMAGE:-mcr.microsoft.com/dotnet/runtime-deps:10.0} AS final
+FROM ${FINAL_BASE_IMAGE:-mcr.microsoft.com/dotnet/aspnet:10.0} AS final
 WORKDIR /app
 EXPOSE 8080
 COPY --from=publish /app/publish .
