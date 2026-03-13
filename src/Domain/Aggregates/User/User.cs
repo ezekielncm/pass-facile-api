@@ -4,9 +4,7 @@ using System.Text;
 using Domain.ValueObjects.Identities;
 using Domain.ValueObjects;
 using Domain.Common;
-using Domain.Events;
-
-using Domain.Enums;
+using Domain.DomainEvents.User;
 
 namespace Domain.Aggregates.User
 {

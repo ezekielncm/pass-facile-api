@@ -13,5 +13,6 @@ namespace Application.Common.Interfaces.Auth
         //Task<string> GeneratePasswordResetTokenAsync(string email, CancellationToken cancellationToken = default);
         Task<(bool Success, string? Error)> RequestOtpAsync(string phoneNumber);
         Task<(bool Success, string? Token, string? Error)> VerifyOtpAsync(string phoneNumber, string otp);
+        //Task<(bool Success, string? AccessToken, string? RefreshToken, string? Error)> RefreshTokenAsync(string refreshToken);
     }
 }

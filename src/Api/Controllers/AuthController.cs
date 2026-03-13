@@ -1,4 +1,5 @@
 ﻿using Api.Contracts.Auth;
+using Application.Auth.Commands.RefreshToken;
 using Application.Auth.Commands.RequestOtp;
 using Application.Auth.Commands.VerifyOtp;
 using Application.Common.Models;
@@ -22,8 +23,8 @@ namespace Api.Controllers
         [HttpPost("send-otp")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [AllowAnonymous]
-        public async Task<IActionResult> Requestotp(
-            [FromBody] OtpRequest request)
+        public async Task<IActionResult> RequestOtp(
+            [FromBody] SendOtpRequest request)
         {
             var commad = new RequestOtpCommand(request.PhoneNumber);
             var result = await _mediator.Send(commad,CancellationToken.None);
@@ -37,10 +38,10 @@ namespace Api.Controllers
         }
         [HttpPost("verify-otp")]
         [AllowAnonymous]
-        public async Task<IActionResult> Verifiotp(
-            [FromBody] OtpRequest request)
+        public async Task<IActionResult> VerifyOtp(
+            [FromBody] VerifyOtpRequest request)
         {
-            var command = new VerifyOtpCommand(request.PhoneNumber, request.Otp!);
+            var command = new VerifyOtpCommand(request.PhoneNumber, request.Otp);
             var result = await _mediator.Send(command);
             return result.Match<IActionResult>(
                 onSuccess: Response => Ok(Response),
@@ -50,21 +51,21 @@ namespace Api.Controllers
                     _ => BadRequest(new { error.Code, error.Message })
                 });
         }
-        
-        //[HttpPost("refresh")]
-        //[Authorize]
-        //public async Task<IActionResult> refresh(
-        //    [FromBody]RefreshRequest request)
-        //{
-        //    var command = new RefreshTokenCommand(request.refreshToken);
-        //    var result = await _mediator.Send(command);
-        //    return result.Match<IActionResult>(
-        //        onSuccess: Response => Ok(Response),
-        //        onFailure: Error => Error.Code switch
-        //        {
-        //            var c when c.Contains("Notfound") => NotFound(Error),
-        //            _ => BadRequest(new { Error.Code, Error.Message })
-        //        });
-        //}
+
+        [HttpPost("refresh")]
+        [Authorize]
+        public async Task<IActionResult> refresh(
+            [FromBody] RefreshRequest request)
+        {
+            var command = new RefreshTokenCommand(request.RefreshToken);
+            var result = await _mediator.Send(command);
+            return result.Match<IActionResult>(
+                onSuccess: Response => Ok(Response),
+                onFailure: Error => Error.Code switch
+                {
+                    var c when c.Contains("Notfound") => NotFound(Error),
+                    _ => BadRequest(new { Error.Code, Error.Message })
+                });
+        }
     }
 }

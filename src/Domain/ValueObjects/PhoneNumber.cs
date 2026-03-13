@@ -1,8 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using Domain.Common;
+using System.Text.RegularExpressions;
 
 namespace Domain.ValueObjects;
 
-public sealed record PhoneNumber
+public sealed record PhoneNumber:ValueObject
 {
     private static readonly Regex PhoneRegex = new(@"^\+?\d{7,15}$", RegexOptions.Compiled);
 
@@ -63,4 +64,8 @@ public sealed record PhoneNumber
     public string ToInternationalFormat() => $"+{CountryCode} {NationalNumber}";
 
     public override string ToString() => Value;
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value;
+    }
 }

@@ -5,7 +5,7 @@ using Domain.ValueObjects.Identities;
 using Domain.ValueObjects;
 using Domain.Common;
 
-namespace Domain.Events
+namespace Domain.DomainEvents.User
 {
     public record UserRegistered(
         UserId UserId,

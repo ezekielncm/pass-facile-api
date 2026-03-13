@@ -5,16 +5,16 @@ using System.Text;
 
 namespace Domain.ValueObjects.Identities
 {
-    public sealed record UserId
+    public sealed record EventId
         :ValueObject
     {
-        public Guid Value { get; init; }
-        private UserId(Guid id)
+        public Guid Value { get; }
+        private EventId(Guid value)
         {
-            Value = id;
+            Value = value;
         }
-        public static UserId NewId() => new(Guid.NewGuid());
-        public static UserId FromGuid(Guid value) => new(value);
+        public static EventId NewId() => new(Guid.NewGuid());
+        public static EventId From(Guid value) => new(value);
         protected override IEnumerable<object?> GetEqualityComponents()
         {
             yield return Value;

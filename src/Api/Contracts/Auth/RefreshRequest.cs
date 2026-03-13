@@ -2,6 +2,6 @@
 {
     public sealed record RefreshRequest
     {
-        public required string refreshToken { get; init; }
+        public required string RefreshToken { get; init; }
     }
 }

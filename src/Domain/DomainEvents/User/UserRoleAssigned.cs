@@ -1,11 +1,11 @@
-﻿using Domain.Common;
-using Domain.Enums;
+﻿using Domain.Aggregates.User;
+using Domain.Common;
 using Domain.ValueObjects.Identities;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Domain.Events
+namespace Domain.DomainEvents.User
 {
     public sealed record UserRoleAssigned
     (UserId UserId,

@@ -1,0 +1,26 @@
+using Domain.Common;
+
+namespace Domain.ValueObjects
+{
+    public sealed class Channel : ValueObject
+    {
+        public string Value { get; }
+
+        private Channel(string value)
+        {
+            Value = value;
+        }
+
+        public static Channel From(string value)
+        {
+            Guard.Against.NullOrWhiteSpace(value, nameof(value));
+            return new Channel(value.Trim().ToUpperInvariant());
+        }
+
+        protected override IEnumerable<object?> GetEqualityComponents()
+        {
+            yield return Value;
+        }
+    }
+}
+

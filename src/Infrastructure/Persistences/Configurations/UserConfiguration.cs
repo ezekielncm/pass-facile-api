@@ -1,5 +1,4 @@
 ﻿using Domain.Aggregates.User;
-using Domain.Enums;
 using Domain.ValueObjects;
 using Domain.ValueObjects.Identities;
 using Microsoft.EntityFrameworkCore;
