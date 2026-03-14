@@ -41,7 +41,7 @@ services:
       context: .
       dockerfile: src/Api/Dockerfile
     ports: 
-     - "8080:80"
+     - "8080:8080"
     networks:
      - pf-network
 
