@@ -19,27 +19,27 @@ namespace Api.Controllers
             _logger = logger;
             _mediator = mediator;
         }
-        [Authorize]
-        [HttpPut("me/profile")]
-        public async Task<IActionResult> UpdateProfile(
-            [FromBody]UpdateProfileRequest request)
-        {
-            var cmd = new UpdateProfileCommand
-            (
-                request.DisplayName,
-                request.Bio,
-                request.LogoUrl,
-                request.BannerUrl,
-                request.Slug
-            );
-            var result = _mediator.Send(cmd, CancellationToken.None);
-            return result.Match<IActionResult>(
-                onSuccess: Response=>Ok(Response),
-                onFailure: error => error.Code switch
-                {
-                    var c when c.Contains("Notfound") => NotFound(error),
-                    _ => BadRequest(new { error.Code, error.Message })
-                });
-        }
+        //[Authorize]
+        //[HttpPut("me/profile")]
+        //public async Task<IActionResult> UpdateProfile(
+        //    [FromBody]UpdateProfileRequest request)
+        //{
+        //    var cmd = new UpdateProfileCommand
+        //    (
+        //        request.DisplayName,
+        //        request.Bio,
+        //        request.LogoUrl,
+        //        request.BannerUrl,
+        //        request.Slug
+        //    );
+        //    var result = _mediator.Send(cmd, CancellationToken.None);
+        //    return result.Match<IActionResult>(
+        //        onSuccess: Response=>Ok(Response),
+        //        onFailure: error => error.Code switch
+        //        {
+        //            var c when c.Contains("Notfound") => NotFound(error),
+        //            _ => BadRequest(new { error.Code, error.Message })
+        //        });
+        //}
     }
 }
