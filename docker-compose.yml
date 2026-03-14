@@ -40,6 +40,8 @@ services:
     build:
       context: .
       dockerfile: src/Api/Dockerfile
+    ports: 
+     - "8080:80"
     networks:
      - pf-network
 
