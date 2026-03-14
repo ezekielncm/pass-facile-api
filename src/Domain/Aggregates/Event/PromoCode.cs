@@ -24,11 +24,11 @@ namespace Domain.Aggregates.Event
             : base(id)
         {
             Guard.Against.Null(eventId, nameof(eventId));
-            Guard.Against.NullOrWhiteSpace(code, nameof(code));
+            Guard.Against.NullOrEmpty(code, nameof(code));
 
             if (discountAmount <= 0)
             {
-                throw new DomainException("PromoCode.InvalidDiscount",
+                throw new BusinessRuleValidationException("PromoCode.InvalidDiscount",
                     "Le montant de réduction doit être strictement positif.");
             }
 

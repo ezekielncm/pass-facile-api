@@ -38,7 +38,7 @@ namespace Domain.Aggregates.Event
         {
             if (eventDate <= DateTimeOffset.UtcNow)
             {
-                throw new DomainException("Event.DateInPast",
+                throw new BusinessRuleValidationException("Event.DateInPast",
                     "La date de l'événement doit être dans le futur lors de la création.");
             }
 
@@ -85,7 +85,7 @@ namespace Domain.Aggregates.Event
 
             if (!_categories.Any(c => c.IsActive))
             {
-                throw new DomainException("Event.NoActiveCategory",
+                throw new BusinessRuleValidationException("Event.NoActiveCategory",
                     "Un événement ne peut être publié que s'il possède au moins une catégorie active.");
             }
 

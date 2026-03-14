@@ -3,5 +3,5 @@ using Domain.ValueObjects.Identities;
 
 namespace Domain.DomainEvents.Event
 {
-    public sealed record EventPublished(EventId EventId) : Common.Event;
+    public sealed record EventPublished(EventId Event) : Common.DomainEvent;
 }

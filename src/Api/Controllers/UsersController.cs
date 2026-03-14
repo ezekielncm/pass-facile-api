@@ -1,4 +1,6 @@
 ﻿using Api.Contracts.Users;
+using Application.Common.Models;
+using Application.User.Commands.UpdateProfile;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,17 +21,17 @@ namespace Api.Controllers
         }
         [Authorize]
         [HttpPut("me/profile")]
-        public IActionResult me(
+        public async Task<IActionResult> UpdateProfile(
             [FromBody]UpdateProfileRequest request)
         {
             var cmd = new UpdateProfileCommand
-            {
-                DisplayName = request.DisplayName,
-                Bio = request.Bio,
-                LogoUrl = request.LogoUrl,
-                BannerUrl = request.BannerUrl,
-                Slug = request.Slug
-            };
+            (
+                request.DisplayName,
+                request.Bio,
+                request.LogoUrl,
+                request.BannerUrl,
+                request.Slug
+            );
             var result = _mediator.Send(cmd, CancellationToken.None);
             return result.Match<IActionResult>(
                 onSuccess: Response=>Ok(Response),

@@ -5,7 +5,7 @@ namespace Domain.Common
     public abstract class AggregateRoot<TId> : Entity<TId>
     where TId : notnull
     {
-        private readonly List<IEvent> _events = new();
+        private readonly List<IDomainEvent> _events = new();
 
         protected AggregateRoot(TId id) : base(id) { }
 
@@ -15,12 +15,12 @@ namespace Domain.Common
         /// Domain events raised by this aggregate.
         /// Read-only access for infrastructure to publish events.
         /// </summary>
-        public IReadOnlyCollection<IEvent> Events => _events.AsReadOnly();
+        public IReadOnlyCollection<IDomainEvent> Events => _events.AsReadOnly();
 
         /// <summary>
         /// Raise a domain event to be published after transaction commit.
         /// </summary>
-        protected void RaiseEvent(IEvent e)
+        protected void RaiseEvent(IDomainEvent e)
         {
             Guard.Against.Null(e, nameof(e));
             _events.Add(e);
@@ -33,7 +33,7 @@ namespace Domain.Common
         {
             _events.Clear();
         }
-        public void RemoveEvent(IEvent e)
+        public void RemoveEvent(IDomainEvent e)
         {
             Guard.Against.Null(e, nameof(e));
             _events.Remove(e);

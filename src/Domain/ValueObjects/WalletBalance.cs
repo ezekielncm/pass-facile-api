@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class WalletBalance : ValueObject
+    public sealed record WalletBalance : ValueObject
     {
         public Money Available { get; }
         public Money Pending { get; }
@@ -23,9 +23,9 @@ namespace Domain.ValueObjects
 
         public WalletBalance MovePendingToAvailable(Money amount)
         {
-            if (amount > Pending)
+            if (amount >= Pending)
             {
-                throw new DomainException("WalletBalance.PendingTooLow",
+                throw new BusinessRuleValidationException("WalletBalance.PendingTooLow",
                     "Le montant pending est insuffisant.");
             }
 
@@ -34,9 +34,9 @@ namespace Domain.ValueObjects
 
         public WalletBalance Withdraw(Money amount)
         {
-            if (amount > Available)
+            if (amount >= Available)
             {
-                throw new DomainException("WalletBalance.NotEnoughFunds",
+                throw new BusinessRuleValidationException("WalletBalance.NotEnoughFunds",
                     "Le solde disponible est insuffisant pour ce retrait.");
             }
 

@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class ScanResult : ValueObject
+    public sealed record ScanResult : ValueObject
     {
         public string Value { get; }
 
@@ -13,7 +13,7 @@ namespace Domain.ValueObjects
 
         public static ScanResult From(string value)
         {
-            Guard.Against.NullOrWhiteSpace(value, nameof(value));
+            Guard.Against.NullOrEmpty(value, nameof(value));
             return new ScanResult(value.Trim().ToUpperInvariant());
         }
 

@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class Venue : ValueObject
+    public sealed record Venue : ValueObject
     {
         public string Name { get; }
         public string AddressLine1 { get; }
@@ -31,10 +31,10 @@ namespace Domain.ValueObjects
             string city,
             string country)
         {
-            Guard.Against.NullOrWhiteSpace(name, nameof(name));
-            Guard.Against.NullOrWhiteSpace(addressLine1, nameof(addressLine1));
-            Guard.Against.NullOrWhiteSpace(city, nameof(city));
-            Guard.Against.NullOrWhiteSpace(country, nameof(country));
+            Guard.Against.NullOrEmpty(name, nameof(name));
+            Guard.Against.NullOrEmpty(addressLine1, nameof(addressLine1));
+            Guard.Against.NullOrEmpty(city, nameof(city));
+            Guard.Against.NullOrEmpty(country, nameof(country));
 
             return new Venue(
                 name.Trim(),

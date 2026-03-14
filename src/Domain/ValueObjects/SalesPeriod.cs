@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class SalesPeriod : ValueObject
+    public sealed record SalesPeriod : ValueObject
     {
         public DateTimeOffset StartDate { get; }
         public DateTimeOffset EndDate   { get; }
@@ -17,7 +17,7 @@ namespace Domain.ValueObjects
         {
             if (endDate <= startDate)
             {
-                throw new DomainException("SalesPeriod.InvalidRange",
+                throw new BusinessRuleValidationException("SalesPeriod.InvalidRange",
                     "La date de fin des ventes doit être postérieure à la date de début.");
             }
 

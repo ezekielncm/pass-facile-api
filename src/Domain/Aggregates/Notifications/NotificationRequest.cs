@@ -39,7 +39,7 @@ namespace Domain.Aggregates.Notifications
         {
             if (_attempts.Count >= 3)
             {
-                throw new DomainException("Notification.MaxAttempts",
+                throw new BusinessRuleValidationException("Notification.MaxAttempts",
                     "Maximum 3 tentatives d'envoi par notification.");
             }
 

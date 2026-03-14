@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class Channel : ValueObject
+    public sealed record Channel : ValueObject
     {
         public string Value { get; }
 
@@ -13,7 +13,7 @@ namespace Domain.ValueObjects
 
         public static Channel From(string value)
         {
-            Guard.Against.NullOrWhiteSpace(value, nameof(value));
+            Guard.Against.NullOrEmpty(value, nameof(value));
             return new Channel(value.Trim().ToUpperInvariant());
         }
 

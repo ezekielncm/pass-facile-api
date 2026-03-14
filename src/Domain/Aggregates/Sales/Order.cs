@@ -38,7 +38,7 @@ namespace Domain.Aggregates.Sales
             var itemList = items.ToList();
             if (!itemList.Any())
             {
-                throw new DomainException("Order.Empty", "Une commande doit contenir au moins un article.");
+                throw new BusinessRuleValidationException("Order.Empty", "Une commande doit contenir au moins un article.");
             }
 
             return new Order(OrderId.NewId(), itemList, serviceFee);
@@ -58,7 +58,7 @@ namespace Domain.Aggregates.Sales
 
             if (Payment is null)
             {
-                throw new DomainException("Order.NoPayment", "Aucun paiement n'est associé à cette commande.");
+                throw new BusinessRuleValidationException("Order.NoPayment", "Aucun paiement n'est associé à cette commande.");
             }
 
             Payment.MarkConfirmed();
@@ -71,7 +71,7 @@ namespace Domain.Aggregates.Sales
 
             if (Payment is null)
             {
-                throw new DomainException("Order.NoPayment", "Aucun paiement n'est associé à cette commande.");
+                throw new BusinessRuleValidationException("Order.NoPayment", "Aucun paiement n'est associé à cette commande.");
             }
 
             Payment.MarkFailed(reason);
@@ -84,7 +84,7 @@ namespace Domain.Aggregates.Sales
 
             if (Payment is null || Payment.Status != PaymentStatus.Confirmed)
             {
-                throw new DomainException("Order.CannotConfirm",
+                throw new BusinessRuleValidationException("Order.CannotConfirm",
                     "Une commande ne peut être confirmée que si le paiement est confirmé.");
             }
 
@@ -108,16 +108,16 @@ namespace Domain.Aggregates.Sales
 
             if (Payment is null || Payment.Status != PaymentStatus.Confirmed)
             {
-                throw new DomainException("Order.RefundWithoutPayment",
+                throw new BusinessRuleValidationException("Order.RefundWithoutPayment",
                     "Un remboursement ne peut être émis que si un paiement confirmé existe.");
             }
 
             var refundedSoFar = _refunds.Aggregate(Money.From(0, amount.Currency),
                 (acc, r) => acc.Add(r.Amount));
 
-            if (refundedSoFar.Add(amount) > Total)
+            if (refundedSoFar.Add(amount) >= Total)
             {
-                throw new DomainException("Order.RefundTooHigh",
+                throw new BusinessRuleValidationException("Order.RefundTooHigh",
                     "Le montant remboursé ne peut excéder le montant original de la commande.");
             }
 
@@ -132,7 +132,7 @@ namespace Domain.Aggregates.Sales
         {
             if (Status == OrderStatus.Cancelled)
             {
-                throw new DomainException("Order.CancelledImmutable",
+                throw new BusinessRuleValidationException("Order.CancelledImmutable",
                     "Une commande annulée ne peut plus être modifiée.");
             }
         }
@@ -168,11 +168,11 @@ namespace Domain.Aggregates.Sales
             : base(id)
         {
             Guard.Against.Null(orderId, nameof(orderId));
-            Guard.Against.NullOrWhiteSpace(sku, nameof(sku));
+            Guard.Against.NullOrEmpty(sku, nameof(sku));
 
             if (quantity is < 1 or > 10)
             {
-                throw new DomainException("OrderItem.QuantityOutOfRange",
+                throw new BusinessRuleValidationException("OrderItem.QuantityOutOfRange",
                     "La quantité d'un article doit être comprise entre 1 et 10.");
             }
 

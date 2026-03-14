@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <Folder Include="Messaging\" />
+    <Folder Include="Persistences\Configurations\" />
+    <Folder Include="Persistences\Repositories\" />
   </ItemGroup>
 
   <ItemGroup>

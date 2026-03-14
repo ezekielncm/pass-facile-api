@@ -1,6 +1,6 @@
 ﻿namespace Domain.Common
 {
-    public interface IEvent
+    public interface IDomainEvent
     {
         /// <summary>
         /// When the event occurred.
@@ -16,18 +16,18 @@
     /// <summary>
     /// Base record for domain events (recommended approach with C# records).
     /// </summary>
-    public abstract class Event : IEvent
+    public abstract record DomainEvent : IDomainEvent
     {
         public DateTime OccurredAt { get; init; }
         public Guid EventId { get; init; }
 
-        protected Event()
+        protected DomainEvent()
         {
             OccurredAt = DateTime.UtcNow;
             EventId = Guid.NewGuid();
         }
 
-        protected Event(DateTime occurredAt)
+        protected DomainEvent(DateTime occurredAt)
         {
             OccurredAt = occurredAt;
             EventId = Guid.NewGuid();

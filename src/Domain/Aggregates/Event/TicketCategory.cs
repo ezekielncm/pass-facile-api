@@ -24,17 +24,17 @@ namespace Domain.Aggregates.Event
             : base(id)
         {
             Guard.Against.Null(eventId, nameof(eventId));
-            Guard.Against.NullOrWhiteSpace(name, nameof(name));
+            Guard.Against.NullOrEmpty(name, nameof(name));
 
             if (price < 0)
             {
-                throw new DomainException("TicketCategory.NegativePrice",
+                throw new BusinessRuleValidationException("TicketCategory.NegativePrice",
                     "Le prix d'une catégorie ne peut pas être négatif.");
             }
 
             if (quota <= 0)
             {
-                throw new DomainException("TicketCategory.InvalidQuota",
+                throw new BusinessRuleValidationException("TicketCategory.InvalidQuota",
                     "Le quota d'une catégorie doit être strictement positif.");
             }
 

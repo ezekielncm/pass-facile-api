@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class Money : ValueObject
+    public sealed record Money : ValueObject
     {
         public decimal Amount { get; }
         public string Currency { get; }
@@ -17,10 +17,10 @@ namespace Domain.ValueObjects
         {
             if (amount < 0)
             {
-                throw new DomainException("Money.Negative", "Le montant ne peut pas être négatif.");
+                throw new BusinessRuleValidationException("Money.Negative", "Le montant ne peut pas être négatif.");
             }
 
-            Guard.Against.NullOrWhiteSpace(currency, nameof(currency));
+            Guard.Against.NullOrEmpty(currency, nameof(currency));
 
             return new Money(decimal.Round(amount, 2), currency.ToUpperInvariant());
         }
@@ -29,7 +29,7 @@ namespace Domain.ValueObjects
         {
             if (Currency != other.Currency)
             {
-                throw new DomainException("Money.CurrencyMismatch", "Les devises doivent être identiques.");
+                throw new BusinessRuleValidationException("Money.CurrencyMismatch", "Les devises doivent être identiques.");
             }
 
             return From(Amount + other.Amount, Currency);

@@ -3,5 +3,5 @@ using Domain.ValueObjects.Identities;
 
 namespace Domain.DomainEvents.Event
 {
-    public sealed record CategoryAdded(EventId EventId, Guid TicketCategoryId) : Common.Event;
+    public sealed record CategoryAdded(EventId Event, Guid TicketCategoryId) : Common.DomainEvent;
 }

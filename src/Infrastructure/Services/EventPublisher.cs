@@ -17,12 +17,12 @@ namespace Infrastructure.Services
         }
 
         public Task PublishAsync<T>(T domainEvent, CancellationToken cancellationToken = default)
-            where T : IEvent
+            where T : IDomainEvent
         {
-            return PublishAsync(new[] { (IEvent)domainEvent }, cancellationToken);
+            return PublishAsync(new[] { (IDomainEvent)domainEvent }, cancellationToken);
         }
 
-        public Task PublishAsync(IEnumerable<IEvent> domainEvents, CancellationToken cancellationToken = default)
+        public Task PublishAsync(IEnumerable<IDomainEvent> domainEvents, CancellationToken cancellationToken = default)
         {
             foreach (var ev in domainEvents)
             {

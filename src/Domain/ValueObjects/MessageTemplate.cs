@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class MessageTemplate : ValueObject
+    public sealed record MessageTemplate : ValueObject
     {
         public string Code { get; }
 
@@ -13,7 +13,7 @@ namespace Domain.ValueObjects
 
         public static MessageTemplate From(string code)
         {
-            Guard.Against.NullOrWhiteSpace(code, nameof(code));
+            Guard.Against.NullOrEmpty(code, nameof(code));
             return new MessageTemplate(code.Trim().ToUpperInvariant());
         }
 

@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class PaymentMethod : ValueObject
+    public sealed record PaymentMethod : ValueObject
     {
         public string Value { get; }
 
@@ -13,7 +13,7 @@ namespace Domain.ValueObjects
 
         public static PaymentMethod From(string value)
         {
-            Guard.Against.NullOrWhiteSpace(value, nameof(value));
+            Guard.Against.NullOrEmpty(value, nameof(value));
             return new PaymentMethod(value.Trim().ToUpperInvariant());
         }
 

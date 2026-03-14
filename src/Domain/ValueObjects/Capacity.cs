@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class Capacity : ValueObject
+    public sealed record Capacity : ValueObject
     {
         public int Total { get; }
 
@@ -15,7 +15,7 @@ namespace Domain.ValueObjects
         {
             if (total < 0)
             {
-                throw new DomainException("Capacity.Negative",
+                throw new BusinessRuleValidationException("Capacity.Negative",
                     "La capacité totale ne peut pas être négative.");
             }
 

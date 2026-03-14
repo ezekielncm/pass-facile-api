@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.ValueObjects
 {
-    public sealed class RecipientContact : ValueObject
+    public sealed record RecipientContact : ValueObject
     {
         public string Value { get; }
 
@@ -13,7 +13,7 @@ namespace Domain.ValueObjects
 
         public static RecipientContact From(string value)
         {
-            Guard.Against.NullOrWhiteSpace(value, nameof(value));
+            Guard.Against.NullOrEmpty(value, nameof(value));
             return new RecipientContact(value.Trim());
         }
 

@@ -54,7 +54,7 @@ namespace Domain.Aggregates.AccessControl
             // Invariant: un agent ne peut scanner que les événements auxquels il est assigné
             if (AgentId == Guid.Empty)
             {
-                throw new DomainException("ScanSession.AgentNotAssigned",
+                throw new BusinessRuleValidationException("ScanSession.AgentNotAssigned",
                     "Un agent doit être assigné pour scanner des tickets.");
             }
 
@@ -85,7 +85,7 @@ namespace Domain.Aggregates.AccessControl
 
             if (now - CreatedAt > TimeSpan.FromHours(24))
             {
-                throw new DomainException("ScanSession.SyncTooLate",
+                throw new BusinessRuleValidationException("ScanSession.SyncTooLate",
                     "Une ScanSession hors ligne doit être synchronisée dans les 24h.");
             }
 

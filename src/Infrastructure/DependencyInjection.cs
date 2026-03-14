@@ -52,7 +52,7 @@ namespace Infrastructure
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IUnitOfWork,UnitOfWork>();
             services.AddScoped<IEventPublisher,EventPublisher>();
-            services.AddScoped<IUserRepository,EfCoreUserRepository>();
+            //services.AddScoped<IUserRepository,EfCoreUserRepository>();
 
             services.AddHttpClient<IkkodiClient>();
 

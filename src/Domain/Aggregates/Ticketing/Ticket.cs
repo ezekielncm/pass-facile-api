@@ -48,7 +48,7 @@ namespace Domain.Aggregates.Ticketing
         {
             if (!IsIssued)
             {
-                throw new DomainException("Ticket.NotIssued",
+                throw new BusinessRuleValidationException("Ticket.NotIssued",
                     "Un QR code ne peut être généré que pour un ticket émis.");
             }
 
@@ -74,13 +74,13 @@ namespace Domain.Aggregates.Ticketing
         {
             if (IsRevoked)
             {
-                throw new DomainException("Ticket.RevokedCannotBeUsed",
+                throw new BusinessRuleValidationException("Ticket.RevokedCannotBeUsed",
                     "Un ticket révoqué ne peut plus être scanné.");
             }
 
             if (IsUsed)
             {
-                throw new DomainException("Ticket.AlreadyUsed",
+                throw new BusinessRuleValidationException("Ticket.AlreadyUsed",
                     "Un ticket ne peut être scanné qu'une seule fois.");
             }
 

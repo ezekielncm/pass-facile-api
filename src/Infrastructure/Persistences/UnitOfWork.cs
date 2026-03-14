@@ -30,8 +30,8 @@ namespace Infrastructure.Persistences
                 .SelectMany(entity =>
                 {
                     var prop = entity!.GetType().GetProperty("DomainEvents");
-                    var events = prop?.GetValue(entity) as IEnumerable<IEvent>;
-                    return events ?? Enumerable.Empty<IEvent>();
+                    var events = prop?.GetValue(entity) as IEnumerable<IDomainEvent>;
+                    return events ?? Enumerable.Empty<IDomainEvent>();
                 })
                 .ToList();
 
