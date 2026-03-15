@@ -3,6 +3,7 @@ using Application.Common.Interfaces.Services;
 using Infrastructure.Auth;
 using Infrastructure.Identity;
 using Infrastructure.Persistences;
+using Infrastructure.Persistences.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,7 +53,15 @@ namespace Infrastructure
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IUnitOfWork,UnitOfWork>();
             services.AddScoped<IEventPublisher,EventPublisher>();
-            //services.AddScoped<IUserRepository,EfCoreUserRepository>();
+
+            // Repositories
+            services.AddScoped<IUserRepository, EfCoreUserRepository>();
+            services.AddScoped<IEventRepository, EfCoreEventRepository>();
+            services.AddScoped<IOrderRepository, EfCoreOrderRepository>();
+            services.AddScoped<ITicketRepository, EfCoreTicketRepository>();
+            services.AddScoped<IScanSessionRepository, EfCoreScanSessionRepository>();
+            services.AddScoped<IOrganizerWalletRepository, EfCoreOrganizerWalletRepository>();
+            services.AddScoped<INotificationRequestRepository, EfCoreNotificationRequestRepository>();
 
             services.AddHttpClient<IkkodiClient>();
 
