@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Domain.Aggregates.Sales;
+using Domain.ValueObjects.Identities;
 
 namespace Application.Common.Interfaces.Persistence
 {
-    internal interface IOrderRepository
+    public interface IOrderRepository
     {
+        Task<Order?> GetByIdAsync(OrderId id, CancellationToken cancellationToken = default);
+        Task AddAsync(Order order, CancellationToken cancellationToken = default);
+        Task UpdateAsync(Order order, CancellationToken cancellationToken = default);
     }
 }
