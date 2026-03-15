@@ -42,6 +42,5 @@ namespace Api.Controllers
                 });
         }
 
-        [Authorize]
     }
 }
