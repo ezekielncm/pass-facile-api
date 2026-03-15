@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Domain.Aggregates.Notifications;
 
 namespace Application.Common.Interfaces.Persistence
 {
-    internal interface INotificationRequestRepository
+    public interface INotificationRequestRepository
     {
+        Task<NotificationRequest?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task AddAsync(NotificationRequest request, CancellationToken cancellationToken = default);
+        Task UpdateAsync(NotificationRequest request, CancellationToken cancellationToken = default);
     }
 }

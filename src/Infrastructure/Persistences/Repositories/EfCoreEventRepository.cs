@@ -1,10 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Application.Common.Interfaces.Persistence;
+using Domain.Aggregates.Event;
+using Domain.ValueObjects.Identities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistences.Repositories
 {
-    internal class EfCoreEventRepository
+    internal sealed class EfCoreEventRepository : IEventRepository
     {
+        private readonly AppDbContext _context;
+
+        public EfCoreEventRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Event?> GetByIdAsync(EventId id, CancellationToken cancellationToken = default)
+        {
+            return await _context.Events
+                .Include(e => e.Categories)
+                .Include(e => e.PromoCodes)
+                .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        }
+
+        public async Task AddAsync(Event @event, CancellationToken cancellationToken = default)
+        {
+            await _context.Events.AddAsync(@event, cancellationToken);
+        }
+
+        public Task UpdateAsync(Event @event, CancellationToken cancellationToken = default)
+        {
+            _context.Events.Update(@event);
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(Event @event, CancellationToken cancellationToken = default)
+        {
+            _context.Events.Remove(@event);
+            return Task.CompletedTask;
+        }
+
+        public async Task<bool> ExistAsync(Event @event)
+        {
+            return await _context.Events.AnyAsync(e => e.Id == @event.Id);
+        }
     }
 }
