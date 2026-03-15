@@ -53,7 +53,7 @@ namespace Infrastructure.Auth
                 };
                 var result = await _userManager.CreateAsync(user);
                 if (!result.Succeeded)
-                    return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return (false, string.Join(", ", result.Errors.Select(error => error.Description)));
 
                 //await _userManager.AddToRoleAsync(user,"User"); // rôle par défaut
             }

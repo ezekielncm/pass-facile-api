@@ -150,6 +150,13 @@ Les contrôleurs suivants existent mais ne déclarent pas encore d’actions HTT
 - `ScanController`
 - `TicketsController`
 
+## Conventions de nommage
+
+- Les noms de variables et de paramètres doivent être **descriptifs** et révéler leur intention (ex. `withdrawal` plutôt que `w`, `command` plutôt que `cmd`, `errorCode` plutôt que `c`).
+- Les noms de méthodes publiques suivent la convention **PascalCase** (ex. `Refresh` et non `refresh`).
+- Les paramètres de lambdas LINQ doivent être explicites lorsque leur rôle n'est pas évident (ex. `component` plutôt que `x` ou `obj`, `entry` plutôt que `e`).
+- Évitez les abréviations non standard ; préférez des noms complets.
+
 ## Commandes utiles
 
 Build :

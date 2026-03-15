@@ -78,22 +78,22 @@ namespace Domain.Aggregates.Finance
 
         public void MarkWithdrawalProcessed(Guid withdrawalId)
         {
-            var w = _withdrawals.FirstOrDefault(x => x.Id == withdrawalId);
-            if (w is null) return;
+            var withdrawal = _withdrawals.FirstOrDefault(withdrawalRequest => withdrawalRequest.Id == withdrawalId);
+            if (withdrawal is null) return;
 
-            w.MarkProcessed();
-            RaiseEvent(new WithdrawalProcessed(Id, w.Id));
+            withdrawal.MarkProcessed();
+            RaiseEvent(new WithdrawalProcessed(Id, withdrawal.Id));
         }
 
         public void MarkWithdrawalFailed(Guid withdrawalId)
         {
-            var w = _withdrawals.FirstOrDefault(x => x.Id == withdrawalId);
+            var withdrawal = _withdrawals.FirstOrDefault(withdrawalRequest => withdrawalRequest.Id == withdrawalId);
 
-            if (w is null) return;
+            if (withdrawal is null) return;
 
-            w.MarkFailed();
+            withdrawal.MarkFailed();
             // On pourrait re-créditer `Balance.Available` ici si nécessaire
-            RaiseEvent(new WithdrawalFailed(Id, w.Id));
+            RaiseEvent(new WithdrawalFailed(Id, withdrawal.Id));
         }
     }
 

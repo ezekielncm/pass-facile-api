@@ -19,7 +19,7 @@ namespace Application.Auth.Commands.RefreshToken
             _auth = auth;
             _logger = logger;
         }
-        public async Task<Result<RefreshTokenDto>> Handle(RefreshTokenCommand cmd,CancellationToken cancellationToken)
+        public async Task<Result<RefreshTokenDto>> Handle(RefreshTokenCommand command,CancellationToken cancellationToken)
         {
             return null;
         }

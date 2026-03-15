@@ -16,7 +16,7 @@ public sealed class UpdateProfileCommandHandle
         _auth = auth;
         _logger = logger;
     }
-    public async Task<Result<ProfileDto>> Handle(UpdateProfileCommand cmd, CancellationToken cancellationToken)
+    public async Task<Result<ProfileDto>> Handle(UpdateProfileCommand command, CancellationToken cancellationToken)
     {
         //var result=_auth.UpdateProfile(cmd);
         ProfileDto profile = new ProfileDto(false,"");

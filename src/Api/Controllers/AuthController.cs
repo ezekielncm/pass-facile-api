@@ -26,13 +26,13 @@ namespace Api.Controllers
         public async Task<IActionResult> RequestOtp(
             [FromBody] SendOtpRequest request)
         {
-            var commad = new RequestOtpCommand(request.PhoneNumber);
-            var result = await _mediator.Send(commad,CancellationToken.None);
+            var command = new RequestOtpCommand(request.PhoneNumber);
+            var result = await _mediator.Send(command,CancellationToken.None);
             return result.Match<IActionResult>(
                 onSuccess: Response => Ok(Response),
                 onFailure: error => error.Code switch
                 {
-                    var c when c.Contains("Notfound") => NotFound(error),
+                    var errorCode when errorCode.Contains("Notfound") => NotFound(error),
                     _ => BadRequest(new { error.Code, error.Message })
                 });
         }
@@ -47,14 +47,14 @@ namespace Api.Controllers
                 onSuccess: Response => Ok(Response),
                 onFailure: error => error.Code switch
                 {
-                    var c when c.Contains("Notfound") => NotFound(error),
+                    var errorCode when errorCode.Contains("Notfound") => NotFound(error),
                     _ => BadRequest(new { error.Code, error.Message })
                 });
         }
 
         [HttpPost("refresh")]
         [Authorize]
-        public async Task<IActionResult> refresh(
+        public async Task<IActionResult> Refresh(
             [FromBody] RefreshRequest request)
         {
             var command = new RefreshTokenCommand(request.RefreshToken);
@@ -63,7 +63,7 @@ namespace Api.Controllers
                 onSuccess: Response => Ok(Response),
                 onFailure: Error => Error.Code switch
                 {
-                    var c when c.Contains("Notfound") => NotFound(Error),
+                    var errorCode when errorCode.Contains("Notfound") => NotFound(Error),
                     _ => BadRequest(new { Error.Code, Error.Message })
                 });
         }

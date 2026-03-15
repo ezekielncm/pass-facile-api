@@ -24,12 +24,12 @@
         public override int GetHashCode()
         {
             return GetEqualityComponents()
-                .Where(x => x != null)
-                .Aggregate(1, (current, obj) =>
+                .Where(component => component != null)
+                .Aggregate(1, (current, component) =>
                 {
                     unchecked
                     {
-                        return current * 23 + obj!.GetHashCode();
+                        return current * 23 + component!.GetHashCode();
                     }
                 });
         }

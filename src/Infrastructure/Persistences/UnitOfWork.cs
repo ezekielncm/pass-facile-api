@@ -25,8 +25,8 @@ namespace Infrastructure.Persistences
             // Collect domain events from tracked entities using reflection to support the generic AggregateRoot<TId>
             var domainEvents = _context.ChangeTracker
                 .Entries()
-                .Select(e => e.Entity)
-                .Where(e => e is not null)
+                .Select(entry => entry.Entity)
+                .Where(entity => entity is not null)
                 .SelectMany(entity =>
                 {
                     var prop = entity!.GetType().GetProperty("DomainEvents");

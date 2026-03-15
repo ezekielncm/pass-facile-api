@@ -62,8 +62,8 @@ namespace Domain.Aggregates.Event
             IEnumerable<TicketCategory> categories)
         {
             var id = EventId.NewId();
-            var cats = categories.ToList();
-            return new Event(id, slug, venue, salesPeriod, eventDate, cats);
+            var categoryList = categories.ToList();
+            return new Event(id, slug, venue, salesPeriod, eventDate, categoryList);
         }
 
         public void AddCategory(TicketCategory category)
