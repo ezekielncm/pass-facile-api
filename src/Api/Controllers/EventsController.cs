@@ -20,12 +20,12 @@ namespace Api.Controllers
             _logger = logger;
             _mediator = mediator;
         }
-        [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> PostEvents(
-            [FromBody]CreateEventRequest rq)
-        {
-            var cmd
-        }
+        //[HttpPost]
+        //[Authorize]
+        //public async Task<IActionResult> PostEvents(
+        //    [FromBody]CreateEventRequest rq)
+        //{
+        //    var cmd
+        //}
     }
 }
