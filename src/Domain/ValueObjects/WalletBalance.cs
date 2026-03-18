@@ -12,7 +12,6 @@ namespace Domain.ValueObjects
             Available = available;
             Pending = pending;
         }
-        public WalletBalance() { }
         public static WalletBalance Create(Money available, Money pending)
         {
             return new WalletBalance(available, pending);
