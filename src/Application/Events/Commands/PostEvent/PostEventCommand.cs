@@ -11,10 +11,14 @@ namespace Application.Events.Commands.PostEvent
         string Name,
         string Description,
         string Venue,
-        string StartDate,
-        string EndDate,
+        string Country,
+        string City,
+        string AddressLine1,
+        string? AddressLine2,
+        DateTime StartDate,
+        DateTime EndDate,
         string CoverImageUrl,
-        string Capacity):IRequest<Result<EventDto>>
+        int Capacity):IRequest<Result<EventDto>>
     {
     }
 }

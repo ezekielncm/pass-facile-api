@@ -12,12 +12,14 @@ namespace Domain.Aggregates.Event
     {
         private readonly List<TicketCategory> _categories = [];
         private readonly List<PromoCode> _promoCodes = [];
-
+        public string Name { get; private set; } = null!;
+        public string Description { get; private set; }
         public EventSlug Slug { get; private set; } = null!;
         public Venue Venue { get; private set; } = null!;
         public SalesPeriod SalesPeriod { get; private set; } = null!;
         public Capacity Capacity { get; private set; } = Capacity.From(0);
         public DateTimeOffset EventDate { get; private set; }
+        public string? CoverImageUrl { get; private set; }
         public bool IsPublished { get; private set; }
         public bool SalesClosed { get; private set; }
 
@@ -55,6 +57,7 @@ namespace Domain.Aggregates.Event
         }
 
         public static Event Create(
+
             EventSlug slug,
             Venue venue,
             SalesPeriod salesPeriod,

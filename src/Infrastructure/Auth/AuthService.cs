@@ -65,7 +65,13 @@ namespace Infrastructure.Auth
 
             // En production → SMS. En dev → log.
             //await _smsService.SendAsync(phoneNumber, $"Your verification code: {otp}. Valid 5 minutes.");
-            await _client.SendSmsAsync(phoneNumber, $"Your verification code: {otp}. Valid 5 minutes.");
+            try
+            {
+                await _client.SendSmsAsync($"226{phoneNumber}", $"Your verification code: {otp}. Valid 5 minutes.");
+            }catch(Exception e)
+            {
+
+            }
 
             return (true, otp);
         }

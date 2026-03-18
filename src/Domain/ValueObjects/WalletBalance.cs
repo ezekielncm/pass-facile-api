@@ -6,7 +6,7 @@ namespace Domain.ValueObjects
     {
         public Money Available { get; }
         public Money Pending { get; }
-
+        public WalletBalance() { }
         private WalletBalance(Money available, Money pending)
         {
             Available = available;
