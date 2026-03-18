@@ -10,7 +10,7 @@ namespace Domain.ValueObjects
         {
             Value = value;
         }
-
+        public TicketReference() { }
         public static TicketReference From(string value)
         {
             Guard.Against.NullOrEmpty(value, nameof(value));

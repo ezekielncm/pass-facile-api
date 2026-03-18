@@ -13,6 +13,7 @@ namespace Domain.ValueObjects.Identities
         {
             Value = id;
         }
+        public UserId() { }
         public static UserId NewId() => new(Guid.NewGuid());
         public static UserId FromGuid(Guid value) => new(value);
         protected override IEnumerable<object?> GetEqualityComponents()

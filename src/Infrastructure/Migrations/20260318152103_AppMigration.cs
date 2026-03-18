@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitApp : Migration
+    public partial class AppMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,6 +16,8 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
                     Slug = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
                     Venue_Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Venue_AddressLine1 = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
@@ -26,6 +28,7 @@ namespace Infrastructure.Migrations
                     SalesPeriod_EndDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Capacity = table.Column<int>(type: "integer", nullable: false),
                     EventDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    CoverImageUrl = table.Column<string>(type: "text", nullable: true),
                     IsPublished = table.Column<bool>(type: "boolean", nullable: false),
                     SalesClosed = table.Column<bool>(type: "boolean", nullable: false)
                 },

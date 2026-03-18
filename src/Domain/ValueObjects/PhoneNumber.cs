@@ -29,7 +29,7 @@ public sealed record PhoneNumber:ValueObject
         }
         else
         {
-            countryCode = "1";
+            countryCode = "226";
             nationalNumber = cleaned;
         }
 

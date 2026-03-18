@@ -9,6 +9,10 @@
         /// Gets the unique identifier of the current user.
         /// </summary>
         string? UserId { get; }
+        /// <summary>
+        /// Gets the phone number of the current user.
+        /// </summary>
+        string? PhoneNumber { get; }
 
         /// <summary>
         /// Gets the username of the current user.

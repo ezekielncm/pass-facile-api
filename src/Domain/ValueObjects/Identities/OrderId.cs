@@ -10,7 +10,7 @@ namespace Domain.ValueObjects.Identities
         {
             Value = value;
         }
-
+        public OrderId() { }
         public static OrderId NewId() => new(Guid.NewGuid());
         public static OrderId From(Guid value) => new(value);
 

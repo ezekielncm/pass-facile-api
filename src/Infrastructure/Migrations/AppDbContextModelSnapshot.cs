@@ -90,11 +90,22 @@ namespace Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("Capacity");
 
+                    b.Property<string>("CoverImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset>("EventDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<bool>("SalesClosed")
                         .HasColumnType("boolean");

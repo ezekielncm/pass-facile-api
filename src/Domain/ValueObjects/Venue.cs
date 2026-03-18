@@ -23,7 +23,7 @@ namespace Domain.ValueObjects
             City = city;
             Country = country;
         }
-
+        public Venue() { }
         public static Venue Create(
             string name,
             string addressLine1,

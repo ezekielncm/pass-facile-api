@@ -12,7 +12,7 @@ namespace Domain.ValueObjects
             StartDate = startDate;
             EndDate = endDate;
         }
-
+        public SalesPeriod() { }
         public static SalesPeriod Create(DateTimeOffset startDate, DateTimeOffset endDate)
         {
             if (endDate <= startDate)
