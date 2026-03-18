@@ -10,6 +10,7 @@ namespace Domain.ValueObjects
         {
             Total = total;
         }
+        public Capacity() { }
 
         public static Capacity From(int total)
         {

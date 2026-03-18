@@ -10,6 +10,7 @@ namespace Domain.ValueObjects
         {
             Value = value;
         }
+        public PaymentMethod() { }
 
         public static PaymentMethod From(string value)
         {

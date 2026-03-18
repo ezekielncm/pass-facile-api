@@ -12,7 +12,7 @@ namespace Domain.ValueObjects
             Amount = amount;
             Currency = currency;
         }
-
+        public Money() { }
         public static Money From(decimal amount, string currency = "XOF")
         {
             if (amount < 0)

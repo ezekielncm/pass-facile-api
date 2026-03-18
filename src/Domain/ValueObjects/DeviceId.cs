@@ -10,7 +10,7 @@ namespace Domain.ValueObjects
         {
             Value = value;
         }
-
+        public DeviceId() { }
         public static DeviceId From(string value)
         {
             Guard.Against.NullOrEmpty(value, nameof(value));

@@ -2,6 +2,7 @@ using Domain.Common;
 using Domain.DomainEvents.Event;
 using Domain.ValueObjects;
 using Domain.ValueObjects.Identities;
+using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Aggregates.Event
 {

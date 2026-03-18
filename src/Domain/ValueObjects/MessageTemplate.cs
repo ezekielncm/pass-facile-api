@@ -10,6 +10,7 @@ namespace Domain.ValueObjects
         {
             Code = code;
         }
+        public MessageTemplate() { }
 
         public static MessageTemplate From(string code)
         {

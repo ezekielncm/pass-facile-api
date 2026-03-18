@@ -10,7 +10,7 @@ namespace Domain.ValueObjects
         {
             Value = value;
         }
-
+        public ScanResult() { }
         public static ScanResult From(string value)
         {
             Guard.Against.NullOrEmpty(value, nameof(value));

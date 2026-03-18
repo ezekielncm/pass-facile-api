@@ -10,7 +10,7 @@ namespace Domain.ValueObjects
         {
             Value = value;
         }
-
+        public EventSlug() { }
         public static EventSlug Create(string value)
         {
             Guard.Against.NullOrEmpty(value, nameof(value));

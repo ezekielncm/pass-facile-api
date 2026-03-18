@@ -18,6 +18,7 @@ namespace Domain.ValueObjects
         //public bool IsAdult => Age >= 18;
         public UserProfile WithDisplayName(string displayName) => this with { DisplayName = displayName };
         //public UserProfile WithLastName(string lastName) => this with { LastName = lastName };
+        //public UserProfile() { }
         protected override IEnumerable<object?> GetEqualityComponents()
         {
             yield return DisplayName;

@@ -10,7 +10,7 @@ namespace Domain.ValueObjects
         {
             Value = value;
         }
-
+        public Channel() { }
         public static Channel From(string value)
         {
             Guard.Against.NullOrEmpty(value, nameof(value));
