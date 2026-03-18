@@ -20,13 +20,13 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore clean.slnx
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build clean.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --configuration Release --no-build --verbosity normal
+        run: dotnet test clean.slnx --configuration Release --no-build --verbosity normal
 
   docker-build:
     runs-on: ubuntu-latest
