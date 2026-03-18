@@ -10,7 +10,7 @@ namespace Domain.ValueObjects
         {
             Value = value;
         }
-
+        public QRCodePayload() { }
         public static QRCodePayload From(string value)
         {
             Guard.Against.NullOrEmpty(value, nameof(value));

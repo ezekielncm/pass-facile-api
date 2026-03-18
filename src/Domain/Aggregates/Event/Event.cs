@@ -2,6 +2,7 @@ using Domain.Common;
 using Domain.DomainEvents.Event;
 using Domain.ValueObjects;
 using Domain.ValueObjects.Identities;
+using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Aggregates.Event
 {
@@ -12,7 +13,6 @@ namespace Domain.Aggregates.Event
     {
         private readonly List<TicketCategory> _categories = [];
         private readonly List<PromoCode> _promoCodes = [];
-
         public EventSlug Slug { get; private set; } = null!;
         public Venue Venue { get; private set; } = null!;
         public SalesPeriod SalesPeriod { get; private set; } = null!;

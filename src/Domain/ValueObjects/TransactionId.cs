@@ -10,7 +10,7 @@ namespace Domain.ValueObjects
         {
             Value = value;
         }
-
+        public TransactionId() { }
         public static TransactionId From(string value)
         {
             Guard.Against.NullOrEmpty(value, nameof(value));

@@ -10,7 +10,7 @@ namespace Domain.ValueObjects
         {
             Value = value;
         }
-
+        public RecipientContact() { }
         public static RecipientContact From(string value)
         {
             Guard.Against.NullOrEmpty(value, nameof(value));
