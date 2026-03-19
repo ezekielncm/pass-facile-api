@@ -2,48 +2,64 @@
 using Application.Events.Commands.PostEvent;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class EventsController : ControllerBase
     {
         private readonly ILogger<EventsController> _logger;
         private readonly IMediator _mediator;
-        public EventsController(
-            ILogger<EventsController> logger,
-            IMediator mediator)
+
+        public EventsController(ILogger<EventsController> logger, IMediator mediator)
         {
             _logger = logger;
             _mediator = mediator;
         }
-        //[HttpPost]
-        //[Authorize]
-        //public async Task<IActionResult> PostEvents(
-        //    [FromBody] PostEventRequest rq)
+
+        /// <summary>Crée un nouvel événement (brouillon).</summary>
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PostEvent([FromBody] CreateEventRequest rq)
+        {
+            var cmd = new PostEventCommand(
+                rq.Name,
+                rq.VenueName,
+                rq.Country,
+                rq.City,
+                rq.AddressLine1,
+                rq.AddressLine2,
+                rq.SalesStartDate,
+                rq.SalesEndDate,
+                rq.EventDate);
+
+            var result = await _mediator.Send(cmd, CancellationToken.None);
+
+            return result.Match<IActionResult>(
+                onSuccess: dto => CreatedAtAction(nameof(PostEvent), new { id = dto.Id }, dto),
+                onFailure: error => error.Code switch
+                {
+                    var c when c.Contains("NotFound") => NotFound(error),
+                    _ => BadRequest(new { error.Code, error.Message })
+                });
+        }
+        //[HttpGet("{slug:string}")]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status404NotFound)]
+        //public Task<IActionResult> GetEventPublish(
+        //    string slug)
         //{
-        //    var cmd = new PostEventCommand(
-        //        rq.Name,
-        //        rq.Description,
-        //        rq.Venue,
-        //        rq.Country,
-        //        rq.City,
-        //        rq.AddressLine1,
-        //        rq.AddressLine2,
-        //        DateTime.Parse(rq.StartDate),
-        //        DateTime.Parse(rq.EndDate),
-        //        rq.CoverImageUrl,
-        //        int.Parse(rq.Capacity));
-        //    var result= await _mediator.Send(cmd,CancellationToken.None);
+        //    var cmd = new GetEventPublishCommand(slug);
+        //    var result = _mediator.Send(cmd, CancellationToken.None);
         //    return result.Match<IActionResult>(
-        //        onSuccess:Response=>Ok(Response),
+        //        onSuccess: dto => Ok(dto),
         //        onFailure: error => error.Code switch
         //        {
-        //            var c when c.Contains("Notfound") => NotFound(error),
+        //            var c when c.Contains("NotFound") => NotFound(error),
         //            _ => BadRequest(new { error.Code, error.Message })
         //        });
         //}

@@ -20,6 +20,11 @@ namespace Api.Controllers
         {
             _mediator = mediator;
         }
+        /// <summary>
+        /// send otp to the user phone number for authentication or registration. If the user does not exist, it will be created.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost("send-otp")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [AllowAnonymous]
@@ -36,6 +41,11 @@ namespace Api.Controllers
                     _ => BadRequest(new { error.Code, error.Message })
                 });
         }
+        /// <summary>
+        /// verify otp sent to the user phone number for authentication or registration. If the user does not exist, it will be created.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost("verify-otp")]
         [AllowAnonymous]
         public async Task<IActionResult> VerifyOtp(
@@ -52,6 +62,11 @@ namespace Api.Controllers
                 });
         }
 
+        /// <summary>
+        /// refresh otp sent to the user phone number for authentication or registration. If the user does not exist, it will be created.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost("refresh")]
         [Authorize]
         public async Task<IActionResult> refresh(
