@@ -19,7 +19,7 @@ namespace Api.Controllers
             _logger = logger;
             _mediator = mediator;
         }
-        [Authorize]
+        [Authorize(Policy = "OrganisateurOnly")]
         [HttpPut("me/profile")]
         public async Task<IActionResult> UpdateProfile(
             [FromBody] UpdateProfileRequest request)
