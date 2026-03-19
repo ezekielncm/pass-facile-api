@@ -73,6 +73,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("AgentOnly", policy => policy.RequireRole("Agent"));
+    options.AddPolicy("OrganisateurOnly", policy => policy.RequireRole("Organisateur"));
 });
 
 // Controllers

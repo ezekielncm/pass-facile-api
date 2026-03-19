@@ -70,7 +70,7 @@ namespace Infrastructure.Auth
                 await _client.SendSmsAsync($"226{phoneNumber}", $"Your verification code: {otp}. Valid 5 minutes.");
             }catch(Exception e)
             {
-
+                _logger.LogError(e, "Error sending OTP SMS to {PhoneNumber}", phoneNumber);
             }
 
             return (true, otp);

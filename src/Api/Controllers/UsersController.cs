@@ -19,7 +19,12 @@ namespace Api.Controllers
             _logger = logger;
             _mediator = mediator;
         }
-        [Authorize]
+        /// <summary>
+        /// mise a jour du profile de l'utilisateur connecté. Seul les champs fournis dans la requete seront mis a jour, les autres resteront inchangés. Le champ slug doit être unique et ne peut pas être changé une fois défini. Si le champ slug est fourni dans la requete, il doit être différent de l'ancien slug de l'utilisateur.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [Authorize(Policy = "OrganisateurOnly")]
         [HttpPut("me/profile")]
         public async Task<IActionResult> UpdateProfile(
             [FromBody] UpdateProfileRequest request)

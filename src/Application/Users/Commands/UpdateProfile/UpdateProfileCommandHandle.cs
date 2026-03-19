@@ -29,15 +29,15 @@ public sealed class UpdateProfileCommandHandle
     public async Task<Result<UserDto>> Handle(UpdateProfileCommand cmd, CancellationToken cancellationToken)
     {
         var phone = _currentUserService.PhoneNumber;
-        //var id = _currentUserService.UserId;
         if (phone is null)
         {
-            return null;
+            return Result<UserDto>.Failure(Error.NotFound("Numéro de téléphone introuvable.",cmd));
         }
-        //var userId = UserId.FromGuid(Guid.Parse(id));
         var phoneNumber = new PhoneNumber(phone);
         var profile = new UserProfile(cmd.DisplayName, cmd.Bio, cmd.LogoUrl, cmd.BannerUrl, cmd.Slug);
         var user = User.Register(phoneNumber, profile);
+        user.SetContextRole("Organisateur", "Organisateur");
+        user.MarkOtpVerified();
         await _userRepository.AddAsync(user,CancellationToken.None);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         var result = UserDto.FromDomain(user);

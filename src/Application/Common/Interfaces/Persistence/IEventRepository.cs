@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Domain.Aggregates.Event;
+using Domain.ValueObjects;
 using Domain.ValueObjects.Identities;
 
 namespace Application.Common.Interfaces.Persistence
@@ -8,6 +9,7 @@ namespace Application.Common.Interfaces.Persistence
     public interface IEventRepository
     {
         Task<Event?> GetByIdAsync(EventId id, CancellationToken cancellationToken = default);
+        Task<Event?> GetBySlugAsync(EventSlug slug, CancellationToken cancellationToken = default);
 
         Task AddAsync(Event @event, CancellationToken cancellationToken = default);
 
