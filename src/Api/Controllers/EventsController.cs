@@ -1,5 +1,6 @@
 ﻿using Api.Contracts.Events;
 using Application.Events.Commands.PostEvent;
+using Application.Events.Queries.GetEventPublish;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -47,21 +48,21 @@ namespace Api.Controllers
                     _ => BadRequest(new { error.Code, error.Message })
                 });
         }
-        //[HttpGet("{slug:string}")]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status404NotFound)]
-        //public Task<IActionResult> GetEventPublish(
-        //    string slug)
-        //{
-        //    var cmd = new GetEventPublishCommand(slug);
-        //    var result = _mediator.Send(cmd, CancellationToken.None);
-        //    return result.Match<IActionResult>(
-        //        onSuccess: dto => Ok(dto),
-        //        onFailure: error => error.Code switch
-        //        {
-        //            var c when c.Contains("NotFound") => NotFound(error),
-        //            _ => BadRequest(new { error.Code, error.Message })
-        //        });
-        //}
+        [HttpGet("{slug}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetEventPublish(
+            string slug)
+        {
+            var cmd = new GetEventPublishQuery(slug);
+            var result = await _mediator.Send(cmd, CancellationToken.None);
+            return result.Match<IActionResult>(
+                onSuccess: dto => Ok(dto),
+                onFailure: error => error.Code switch
+                {
+                    var c when c.Contains("NotFound") => NotFound(error),
+                    _ => BadRequest(new { error.Code, error.Message })
+                });
+        }
     }
 }

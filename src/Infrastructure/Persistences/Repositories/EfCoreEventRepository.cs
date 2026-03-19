@@ -1,5 +1,6 @@
 using Application.Common.Interfaces.Persistence;
 using Domain.Aggregates.Event;
+using Domain.ValueObjects;
 using Domain.ValueObjects.Identities;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,13 @@ namespace Infrastructure.Persistences.Repositories
                 .Include(e => e.Categories)
                 .Include(e => e.PromoCodes)
                 .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        }
+        public async Task<Event?> GetBySlugAsync(EventSlug slug, CancellationToken cancellationToken = default)
+        {
+            return await _context.Events
+                .Include(e => e.Categories)
+                .Include(e => e.PromoCodes)
+                .FirstOrDefaultAsync(e => e.Slug == slug, cancellationToken);
         }
 
         public async Task AddAsync(Event @event, CancellationToken cancellationToken = default)

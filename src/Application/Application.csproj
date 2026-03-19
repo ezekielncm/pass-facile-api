@@ -9,7 +9,6 @@
   <ItemGroup>
     <Folder Include="Auth\Commands\Login\" />
     <Folder Include="Auth\Commands\Register\" />
-    <Folder Include="Events\Queries\" />
   </ItemGroup>
 
   <ItemGroup>
