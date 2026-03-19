@@ -32,6 +32,8 @@ namespace Domain.Aggregates.Event
 
         private Event(
             EventId id,
+            string name,
+            string description,
             EventSlug slug,
             Venue venue,
             SalesPeriod salesPeriod,
@@ -46,6 +48,8 @@ namespace Domain.Aggregates.Event
             }
 
             Id = id;
+            Name = name;
+            Description = description;
             Slug = slug;
             Venue = venue;
             SalesPeriod = salesPeriod;
@@ -59,6 +63,8 @@ namespace Domain.Aggregates.Event
 
         public static Event Create(
 
+            string name,
+            string description,
             EventSlug slug,
             Venue venue,
             SalesPeriod salesPeriod,
@@ -67,7 +73,7 @@ namespace Domain.Aggregates.Event
         {
             var id = EventId.NewId();
             var cats = categories.ToList();
-            return new Event(id, slug, venue, salesPeriod, eventDate, cats);
+            return new Event(id, name, description, slug, venue, salesPeriod, eventDate, cats);
         }
 
         public void AddCategory(TicketCategory category)
@@ -111,6 +117,8 @@ namespace Domain.Aggregates.Event
         public Event Duplicate(EventSlug newSlug, SalesPeriod newSalesPeriod, DateTimeOffset newEventDate)
         {
             var duplicate = Create(
+                Name,
+                Description,
                 newSlug,
                 Venue,
                 newSalesPeriod,
