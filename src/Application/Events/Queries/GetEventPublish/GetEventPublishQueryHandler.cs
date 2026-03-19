@@ -26,8 +26,15 @@ namespace Application.Events.Queries.GetEventPublish
             var @event = await _eventRepository.GetBySlugAsync(slug, cancellationToken);
             if (@event is null)
             {
+                _logger.LogWarning("Event with slug {Slug} not found", cmd.Slug);
                 return Result<EventDto>.Failure(Error.NotFound("Event not found", "Event"));
             }
+            if (!@event.IsPublished)
+            {
+                _logger.LogWarning("Event with slug {Slug} is not published", cmd.Slug);
+                return Result<EventDto>.Failure(Error.Validation("Event is not published"));
+            } 
+            _logger.LogInformation("Event with slug {Slug} found and published", cmd.Slug);
             return EventDto.FromDomain(@event);
         }
     }
