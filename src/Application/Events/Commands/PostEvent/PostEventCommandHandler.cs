@@ -1,4 +1,5 @@
-﻿using Application.Common.Interfaces.Persistence;
+﻿using Application.Common.Interfaces.Auth;
+using Application.Common.Interfaces.Persistence;
 using Application.Common.Models;
 using Application.Events.DTOs;
 using Domain.Aggregates.Event;
@@ -14,24 +15,31 @@ namespace Application.Events.Commands.PostEvent
         private readonly ILogger<PostEventCommandHandler> _logger;
         private readonly IEventRepository _eventRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUserService _currentUserService;
 
         public PostEventCommandHandler(
             ILogger<PostEventCommandHandler> logger,
             IEventRepository eventRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            ICurrentUserService currentUserService)
         {
             _logger = logger;
             _eventRepository = eventRepository;
             _unitOfWork = unitOfWork;
+            _currentUserService = currentUserService;
         }
 
         public async Task<Result<EventDto>> Handle(PostEventCommand cmd, CancellationToken cancellationToken)
         {
+            var organizerId = _currentUserService.UserId is not null
+                ? Guid.Parse(_currentUserService.UserId)
+                : Guid.Empty;
+
             var slug = EventSlug.Create(cmd.Name);
-            var venue = Venue.Create(cmd.VenueName, cmd.AddressLine1, cmd.AddressLine2, cmd.City, cmd.Country);
+            var venue = Venue.Create(cmd.VenueName, cmd.City, cmd.Address, cmd.GpsCoordinates);
             var salesPeriod = SalesPeriod.Create(cmd.SalesStartDate, cmd.SalesEndDate);
 
-            var @event = Event.Create(cmd.Name,$"{cmd.Name}",slug, venue, salesPeriod, cmd.EventDate, []);
+            var @event = Event.Create(organizerId, cmd.Name, $"{cmd.Name}", slug, venue, cmd.StartDate, cmd.EndDate, salesPeriod, []);
 
             await _eventRepository.AddAsync(@event, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

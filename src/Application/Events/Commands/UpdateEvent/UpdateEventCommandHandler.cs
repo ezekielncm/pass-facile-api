@@ -1,4 +1,5 @@
-﻿using Application.Common.Interfaces.Persistence;
+﻿using Application.Common.Interfaces.Auth;
+using Application.Common.Interfaces.Persistence;
 using Application.Common.Models;
 using Application.Events.DTOs;
 using Domain.Aggregates.Event;
@@ -6,9 +7,6 @@ using Domain.ValueObjects;
 using Domain.ValueObjects.Identities;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Application.Events.Commands.UpdateEvent
 {
@@ -17,23 +15,26 @@ namespace Application.Events.Commands.UpdateEvent
     {
         private readonly ILogger<UpdateEventCommandHandler> _logger;
         private readonly IEventRepository _eventRepository;
+        private readonly ICurrentUserService _currentUserService;
 
-        public UpdateEventCommandHandler(ILogger<UpdateEventCommandHandler> logger, IEventRepository eventRepository)
+        public UpdateEventCommandHandler(
+            ILogger<UpdateEventCommandHandler> logger,
+            IEventRepository eventRepository,
+            ICurrentUserService currentUserService)
         {
             _logger = logger;
             _eventRepository = eventRepository;
+            _currentUserService = currentUserService;
         }
 
         public async Task<Result<EventDto>> Handle(UpdateEventCommand cmd, CancellationToken cancellationToken)
         {
-            // Implementation for handling the update event command
             var id = Domain.ValueObjects.Identities.EventId.From(cmd.EventId);
             var @event = await _eventRepository.GetByIdAsync(id, cancellationToken);
             var slug = EventSlug.Create(cmd.Name);
-            var venue = Venue.Create(cmd.VenueName, cmd.AddressLine1, cmd.AddressLine2, cmd.City, cmd.Country);
+            var venue = Venue.Create(cmd.VenueName, cmd.City, cmd.Address, cmd.GpsCoordinates);
             var salesPeriod = SalesPeriod.Create(cmd.SalesStartDate, cmd.SalesEndDate);
-            //var eventDate = EventDate.Create(cmd.EventDate);
-            //var category= 
+
             if (@event is null)
             {
                 _logger.LogWarning("Event with id {EventId} not found", cmd.EventId);
@@ -41,8 +42,12 @@ namespace Application.Events.Commands.UpdateEvent
             }
             else
             {
+                var organizerId = _currentUserService.UserId is not null
+                    ? Guid.Parse(_currentUserService.UserId)
+                    : Guid.Empty;
+
                 _logger.LogInformation("Event with id {EventId} found", cmd.EventId);
-                @event = Event.Create(cmd.Name, cmd.Description, slug, venue, salesPeriod, cmd.EventDate, []);
+                @event = Event.Create(organizerId, cmd.Name, cmd.Description, slug, venue, cmd.StartDate, cmd.EndDate, salesPeriod, []);
                 await _eventRepository.UpdateAsync(@event, cancellationToken);
                 return EventDto.FromDomain(@event);
             }

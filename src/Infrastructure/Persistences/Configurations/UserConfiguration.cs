@@ -30,6 +30,9 @@ namespace Infrastructure.Persistences.Configurations
             builder.HasIndex(u => u.PhoneNumber)
                 .IsUnique();
 
+            builder.Property(u => u.DisplayName)
+                .HasMaxLength(100);
+
             builder.OwnsOne(u => u.Profile, profile =>
             {
                 profile.Property(p => p.DisplayName).HasMaxLength(100).HasColumnName("Profile_DisplayName");
@@ -39,7 +42,8 @@ namespace Infrastructure.Persistences.Configurations
                 profile.Property(p => p.Slug).HasMaxLength(100).HasColumnName("Profile_Slug");
             });
 
-            builder.Property(u => u.PhoneVerified);
+            builder.Property(u => u.IsVerified);
+            builder.Property(u => u.CreatedAt);
 
             builder.HasMany(u => u.Roles)
                 .WithOne()
@@ -81,6 +85,8 @@ namespace Infrastructure.Persistences.Configurations
 
             builder.HasKey(o => o.Id);
 
+            builder.Property(o => o.UserId);
+
             builder.Property(o => o.PhoneNumber)
                 .HasConversion(
                     p => p.Value,
@@ -94,7 +100,8 @@ namespace Infrastructure.Persistences.Configurations
 
             builder.Property(o => o.ExpiresAt);
             builder.Property(o => o.CreatedAt);
-            builder.Property(o => o.Used);
+            builder.Property(o => o.IsUsed);
+            builder.Property(o => o.UsedAt);
 
             builder.HasIndex(o => o.PhoneNumber);
         }

@@ -1,4 +1,5 @@
 using Domain.Aggregates.Ticketing;
+using Domain.Enums;
 using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -25,9 +26,23 @@ namespace Infrastructure.Persistences.Configurations
 
             builder.Property(t => t.OrderId);
             builder.Property(t => t.EventId);
-            builder.Property(t => t.IsIssued);
-            builder.Property(t => t.IsRevoked);
-            builder.Property(t => t.IsUsed);
+            builder.Property(t => t.CategoryId);
+
+            builder.Property(t => t.BuyerPhone)
+                .HasConversion(
+                    p => p.Value,
+                    value => new PhoneNumber(value))
+                .HasMaxLength(20)
+                .IsRequired();
+
+            builder.Property(t => t.BuyerName)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            builder.Property(t => t.Status)
+                .HasConversion<int>();
+
+            builder.Property(t => t.IssuedAt);
 
             builder.HasOne(t => t.QRCode)
                 .WithOne()
@@ -55,6 +70,9 @@ namespace Infrastructure.Persistences.Configurations
                     value => QRCodePayload.From(value))
                 .HasMaxLength(2000)
                 .IsRequired();
+
+            builder.Property(q => q.GeneratedAt);
+            builder.Property(q => q.ExpiresAt);
         }
     }
 }

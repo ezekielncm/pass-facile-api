@@ -1,5 +1,6 @@
 using Domain.Common;
 using Domain.DomainEvents.Sales;
+using Domain.Enums;
 using Domain.ValueObjects;
 using Domain.ValueObjects.Identities;
 
@@ -10,10 +11,18 @@ namespace Domain.Aggregates.Sales
         private readonly List<OrderItem> _items = [];
         private readonly List<Refund> _refunds = [];
 
+        public PhoneNumber BuyerPhone { get; private set; } = null!;
+        public Guid CategoryId { get; private set; }
+        public Guid EventId { get; private set; }
+        public Guid? PromoCodeId { get; private set; }
+        public int Quantity { get; private set; }
+        public Money Subtotal { get; private set; } = Money.From(0);
+        public Money Fees { get; private set; } = Money.From(0);
         public Money Total { get; private set; } = Money.From(0);
-        public Money ServiceFee { get; private set; } = Money.From(0);
-        public Payment? Payment { get; private set; }
         public OrderStatus Status { get; private set; }
+        public DateTimeOffset ReservedUntil { get; private set; }
+        public DateTimeOffset CreatedAt { get; private set; }
+        public Payment? Payment { get; private set; }
 
         public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
         public IReadOnlyCollection<Refund> Refunds => _refunds.AsReadOnly();
@@ -21,34 +30,60 @@ namespace Domain.Aggregates.Sales
         // EF
         private Order() { }
 
-        private Order(OrderId id, IEnumerable<OrderItem> items, Money serviceFee)
+        private Order(
+            OrderId id,
+            PhoneNumber buyerPhone,
+            Guid categoryId,
+            Guid eventId,
+            Guid? promoCodeId,
+            int quantity,
+            IEnumerable<OrderItem> items,
+            Money fees,
+            DateTimeOffset reservedUntil)
             : base(id)
         {
             Id = id;
+            BuyerPhone = buyerPhone;
+            CategoryId = categoryId;
+            EventId = eventId;
+            PromoCodeId = promoCodeId;
+            Quantity = quantity;
             Status = OrderStatus.Pending;
+            Fees = fees;
+            ReservedUntil = reservedUntil;
+            CreatedAt = DateTimeOffset.UtcNow;
             _items.AddRange(items);
-            ServiceFee = serviceFee;
-            Total = CalculateTotal();
+            Subtotal = CalculateSubtotal();
+            Total = Subtotal.Add(Fees);
 
             RaiseEvent(new OrderCreated(Id));
         }
 
-        public static Order Create(IEnumerable<OrderItem> items, Money serviceFee)
+        public static Order Create(
+            PhoneNumber buyerPhone,
+            Guid categoryId,
+            Guid eventId,
+            int quantity,
+            IEnumerable<OrderItem> items,
+            Money fees,
+            DateTimeOffset reservedUntil,
+            Guid? promoCodeId = null)
         {
+            Guard.Against.Null(buyerPhone, nameof(buyerPhone));
             var itemList = items.ToList();
             if (!itemList.Any())
             {
                 throw new BusinessRuleValidationException("Order.Empty", "Une commande doit contenir au moins un article.");
             }
 
-            return new Order(OrderId.NewId(), itemList, serviceFee);
+            return new Order(OrderId.NewId(), buyerPhone, categoryId, eventId, promoCodeId, quantity, itemList, fees, reservedUntil);
         }
 
-        public void AddPayment(PaymentMethod method, TransactionId transactionId, Money amount)
+        public void AddPayment(PaymentProvider provider, PhoneNumber phoneNumber, TransactionId transactionId, Money amount)
         {
             EnsureNotCancelled();
 
-            Payment = Payment.Initiate(Id, method, transactionId, amount);
+            Payment = Payment.Initiate(Id, provider, phoneNumber, transactionId, amount);
             RaiseEvent(new PaymentInitiated(Id, transactionId));
         }
 
@@ -102,7 +137,7 @@ namespace Domain.Aggregates.Sales
             RaiseEvent(new OrderCancelled(Id));
         }
 
-        public Refund IssueRefund(Money amount)
+        public Refund IssueRefund(Guid paymentId, Money amount, string reason)
         {
             EnsureNotCancelled();
 
@@ -121,11 +156,21 @@ namespace Domain.Aggregates.Sales
                     "Le montant remboursé ne peut excéder le montant original de la commande.");
             }
 
-            var refund = Refund.Create(Id, amount);
+            var refund = Refund.Create(Id, paymentId, amount, reason);
             _refunds.Add(refund);
 
             RaiseEvent(new RefundIssued(Id, amount));
             return refund;
+        }
+
+        public void ApplyPromo(Guid promoCodeId)
+        {
+            PromoCodeId = promoCodeId;
+        }
+
+        public Money ComputeFees(FeePolicy policy)
+        {
+            return Fees;
         }
 
         private void EnsureNotCancelled()
@@ -137,38 +182,39 @@ namespace Domain.Aggregates.Sales
             }
         }
 
-        private Money CalculateTotal()
+        private Money CalculateSubtotal()
         {
-            var itemsTotal = _items.Aggregate(Money.From(0, ServiceFee.Currency),
+            return _items.Aggregate(Money.From(0, Fees.Currency),
                 (acc, item) => acc.Add(item.LineTotal));
-            return itemsTotal.Add(ServiceFee);
         }
     }
 
     public enum OrderStatus
     {
         Pending = 0,
-        Confirmed = 1,
-        Cancelled = 2
+        Reserved = 1,
+        Confirmed = 2,
+        Cancelled = 3,
+        Refunded = 4
     }
 
     public sealed class OrderItem : Entity<Guid>
     {
         public OrderId OrderId { get; private set; }
-        public string Sku { get; private set; } = null!;
-        public int Quantity { get; private set; }
+        public TicketReference TicketRef { get; private set; } = null!;
         public Money UnitPrice { get; private set; } = null!;
+        public int Quantity { get; private set; }
 
         public Money LineTotal => Money.From(UnitPrice.Amount * Quantity, UnitPrice.Currency);
 
         // EF
         private OrderItem() { }
 
-        private OrderItem(Guid id, OrderId orderId, string sku, int quantity, Money unitPrice)
+        private OrderItem(Guid id, OrderId orderId, TicketReference ticketRef, int quantity, Money unitPrice)
             : base(id)
         {
             Guard.Against.Null(orderId, nameof(orderId));
-            Guard.Against.NullOrEmpty(sku, nameof(sku));
+            Guard.Against.Null(ticketRef, nameof(ticketRef));
 
             if (quantity is < 1 or > 10)
             {
@@ -177,24 +223,27 @@ namespace Domain.Aggregates.Sales
             }
 
             OrderId = orderId;
-            Sku = sku.Trim();
+            TicketRef = ticketRef;
             Quantity = quantity;
             UnitPrice = unitPrice;
         }
 
-        public static OrderItem Create(OrderId orderId, string sku, int quantity, Money unitPrice)
+        public static OrderItem Create(OrderId orderId, TicketReference ticketRef, int quantity, Money unitPrice)
         {
-            return new OrderItem(Guid.NewGuid(), orderId, sku, quantity, unitPrice);
+            return new OrderItem(Guid.NewGuid(), orderId, ticketRef, quantity, unitPrice);
         }
     }
 
     public sealed class Payment : Entity<Guid>
     {
         public OrderId OrderId { get; private set; }
-        public PaymentMethod Method { get; private set; } = null!;
-        public TransactionId TransactionId { get; private set; } = null!;
+        public PaymentProvider Provider { get; private set; }
+        public PhoneNumber PhoneNumber { get; private set; } = null!;
         public Money Amount { get; private set; } = null!;
+        public TransactionId TransactionId { get; private set; } = null!;
         public PaymentStatus Status { get; private set; }
+        public DateTimeOffset InitiatedAt { get; private set; }
+        public DateTimeOffset? ConfirmedAt { get; private set; }
         public string? FailureReason { get; private set; }
 
         // EF
@@ -203,30 +252,35 @@ namespace Domain.Aggregates.Sales
         private Payment(
             Guid id,
             OrderId orderId,
-            PaymentMethod method,
+            PaymentProvider provider,
+            PhoneNumber phoneNumber,
             TransactionId transactionId,
             Money amount)
             : base(id)
         {
             OrderId = orderId;
-            Method = method;
+            Provider = provider;
+            PhoneNumber = phoneNumber;
             TransactionId = transactionId;
             Amount = amount;
             Status = PaymentStatus.Initiated;
+            InitiatedAt = DateTimeOffset.UtcNow;
         }
 
         public static Payment Initiate(
             OrderId orderId,
-            PaymentMethod method,
+            PaymentProvider provider,
+            PhoneNumber phoneNumber,
             TransactionId transactionId,
             Money amount)
         {
-            return new Payment(Guid.NewGuid(), orderId, method, transactionId, amount);
+            return new Payment(Guid.NewGuid(), orderId, provider, phoneNumber, transactionId, amount);
         }
 
         public void MarkConfirmed()
         {
             Status = PaymentStatus.Confirmed;
+            ConfirmedAt = DateTimeOffset.UtcNow;
             FailureReason = null;
         }
 
@@ -241,29 +295,41 @@ namespace Domain.Aggregates.Sales
     {
         Initiated = 0,
         Confirmed = 1,
-        Failed = 2
+        Failed = 2,
+        Expired = 3
     }
 
     public sealed class Refund : Entity<Guid>
     {
         public OrderId OrderId { get; private set; }
+        public Guid PaymentId { get; private set; }
         public Money Amount { get; private set; } = null!;
-        public DateTimeOffset CreatedAt { get; private set; }
+        public string Reason { get; private set; } = null!;
+        public RefundStatus Status { get; private set; }
+        public DateTimeOffset? ProcessedAt { get; private set; }
 
         // EF
         private Refund() { }
 
-        private Refund(Guid id, OrderId orderId, Money amount)
+        private Refund(Guid id, OrderId orderId, Guid paymentId, Money amount, string reason)
             : base(id)
         {
             OrderId = orderId;
+            PaymentId = paymentId;
             Amount = amount;
-            CreatedAt = DateTimeOffset.UtcNow;
+            Reason = reason;
+            Status = Enums.RefundStatus.Requested;
         }
 
-        public static Refund Create(OrderId orderId, Money amount)
+        public static Refund Create(OrderId orderId, Guid paymentId, Money amount, string reason)
         {
-            return new Refund(Guid.NewGuid(), orderId, amount);
+            return new Refund(Guid.NewGuid(), orderId, paymentId, amount, reason);
+        }
+
+        public void Process()
+        {
+            Status = Enums.RefundStatus.Processed;
+            ProcessedAt = DateTimeOffset.UtcNow;
         }
     }
 }

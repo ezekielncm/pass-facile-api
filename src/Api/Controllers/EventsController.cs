@@ -31,13 +31,13 @@ namespace Api.Controllers
             var cmd = new PostEventCommand(
                 rq.Name,
                 rq.VenueName,
-                rq.Country,
                 rq.City,
-                rq.AddressLine1,
-                rq.AddressLine2,
+                rq.Address,
+                rq.GpsCoordinates,
                 rq.SalesStartDate,
                 rq.SalesEndDate,
-                rq.EventDate);
+                rq.StartDate,
+                rq.EndDate);
 
             var result = await _mediator.Send(cmd, CancellationToken.None);
 
@@ -83,13 +83,13 @@ namespace Api.Controllers
                 rq.Name,
                 rq.Description!,
                 rq.VenueName,
-                rq.Country,
                 rq.City,
-                rq.AddressLine1,
-                rq.AddressLine2,
+                rq.Address,
+                rq.GpsCoordinates,
                 rq.SalesStartDate,
                 rq.SalesEndDate,
-                rq.EventDate);
+                rq.StartDate,
+                rq.EndDate);
             var result = await _mediator.Send(cmd, CancellationToken.None);
             return result.Match<IActionResult>(
                 onSuccess: dto => Ok(dto),

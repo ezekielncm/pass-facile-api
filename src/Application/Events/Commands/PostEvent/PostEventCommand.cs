@@ -7,11 +7,11 @@ namespace Application.Events.Commands.PostEvent
     public sealed record PostEventCommand(
         string Name,
         string VenueName,
-        string Country,
         string City,
-        string AddressLine1,
-        string? AddressLine2,
+        string Address,
+        string? GpsCoordinates,
         DateTimeOffset SalesStartDate,
         DateTimeOffset SalesEndDate,
-        DateTimeOffset EventDate) : IRequest<Result<EventDto>>;
+        DateTimeOffset StartDate,
+        DateTimeOffset EndDate) : IRequest<Result<EventDto>>;
 }
