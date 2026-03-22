@@ -5,54 +5,47 @@ namespace Domain.ValueObjects
     public sealed record Venue : ValueObject
     {
         public string Name { get; }
-        public string AddressLine1 { get; }
-        public string? AddressLine2 { get; }
         public string City { get; }
-        public string Country { get; }
+        public string Address { get; }
+        public string? GpsCoordinates { get; }
 
         private Venue(
             string name,
-            string addressLine1,
-            string? addressLine2,
             string city,
-            string country)
+            string address,
+            string? gpsCoordinates)
         {
             Name = name;
-            AddressLine1 = addressLine1;
-            AddressLine2 = addressLine2;
             City = city;
-            Country = country;
+            Address = address;
+            GpsCoordinates = gpsCoordinates;
         }
         public Venue() { }
         public static Venue Create(
             string name,
-            string addressLine1,
-            string? addressLine2,
             string city,
-            string country)
+            string address,
+            string? gpsCoordinates = null)
         {
             Guard.Against.NullOrEmpty(name, nameof(name));
-            Guard.Against.NullOrEmpty(addressLine1, nameof(addressLine1));
             Guard.Against.NullOrEmpty(city, nameof(city));
-            Guard.Against.NullOrEmpty(country, nameof(country));
+            Guard.Against.NullOrEmpty(address, nameof(address));
 
             return new Venue(
                 name.Trim(),
-                addressLine1.Trim(),
-                string.IsNullOrWhiteSpace(addressLine2) ? null : addressLine2.Trim(),
                 city.Trim(),
-                country.Trim());
+                address.Trim(),
+                string.IsNullOrWhiteSpace(gpsCoordinates) ? null : gpsCoordinates.Trim());
         }
 
         protected override IEnumerable<object?> GetEqualityComponents()
         {
             yield return Name;
-            yield return AddressLine1;
-            yield return AddressLine2;
             yield return City;
-            yield return Country;
+            yield return Address;
+            yield return GpsCoordinates;
         }
 
-        public override string ToString() => $"{Name}, {AddressLine1}, {City}, {Country}";
+        public override string ToString() => $"{Name}, {Address}, {City}";
     }
 }

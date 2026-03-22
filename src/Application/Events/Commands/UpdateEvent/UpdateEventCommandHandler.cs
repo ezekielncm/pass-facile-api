@@ -30,10 +30,8 @@ namespace Application.Events.Commands.UpdateEvent
             var id = Domain.ValueObjects.Identities.EventId.From(cmd.EventId);
             var @event = await _eventRepository.GetByIdAsync(id, cancellationToken);
             var slug = EventSlug.Create(cmd.Name);
-            var venue = Venue.Create(cmd.VenueName, cmd.AddressLine1, cmd.AddressLine2, cmd.City, cmd.Country);
+            var venue = Venue.Create(cmd.VenueName, cmd.City, cmd.Address, cmd.GpsCoordinates);
             var salesPeriod = SalesPeriod.Create(cmd.SalesStartDate, cmd.SalesEndDate);
-            //var eventDate = EventDate.Create(cmd.EventDate);
-            //var category= 
             if (@event is null)
             {
                 _logger.LogWarning("Event with id {EventId} not found", cmd.EventId);
@@ -42,7 +40,7 @@ namespace Application.Events.Commands.UpdateEvent
             else
             {
                 _logger.LogInformation("Event with id {EventId} found", cmd.EventId);
-                @event = Event.Create(cmd.Name, cmd.Description, slug, venue, salesPeriod, cmd.EventDate, []);
+                @event = Event.Create(Guid.Empty, cmd.Name, cmd.Description, slug, venue, cmd.StartDate, cmd.EndDate, salesPeriod, []);
                 await _eventRepository.UpdateAsync(@event, cancellationToken);
                 return EventDto.FromDomain(@event);
             }

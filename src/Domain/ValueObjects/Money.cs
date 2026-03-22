@@ -35,6 +35,21 @@ namespace Domain.ValueObjects
             return From(Amount + other.Amount, Currency);
         }
 
+        public Money Subtract(Money other)
+        {
+            if (Currency != other.Currency)
+            {
+                throw new BusinessRuleValidationException("Money.CurrencyMismatch", "Les devises doivent être identiques.");
+            }
+
+            return From(Amount - other.Amount, Currency);
+        }
+
+        public Money Multiply(decimal factor)
+        {
+            return From(Amount * factor, Currency);
+        }
+
         public static bool operator <=(Money left, Money right) => left.Amount <= right.Amount && left.Currency == right.Currency;
         public static bool operator >=(Money left, Money right) => left.Amount >= right.Amount && left.Currency == right.Currency;
 

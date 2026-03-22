@@ -13,8 +13,10 @@ namespace Domain.Aggregates.User
         private readonly List<UserRole> _roles = [];
 
         public PhoneNumber PhoneNumber { get; private set; } = null!;
+        public string? DisplayName { get; private set; }
         public UserProfile? Profile { get; private set; }
-        public bool PhoneVerified { get; private set; }
+        public bool IsVerified { get; private set; }
+        public DateTimeOffset CreatedAt { get; private set; }
 
         public IReadOnlyCollection<UserRole> Roles => _roles.AsReadOnly();
 
@@ -26,7 +28,9 @@ namespace Domain.Aggregates.User
         {
             Id = id;
             PhoneNumber = phoneNumber;
+            DisplayName = profile?.DisplayName;
             Profile = profile;
+            CreatedAt = DateTimeOffset.UtcNow;
 
             RaiseEvent(new UserRegistered(Id, phoneNumber, profile));
         }
@@ -46,12 +50,12 @@ namespace Domain.Aggregates.User
         /// </summary>
         public void MarkOtpVerified()
         {
-            if (PhoneVerified)
+            if (IsVerified)
             {
                 return;
             }
 
-            PhoneVerified = true;
+            IsVerified = true;
             RaiseEvent(new OtpVerified(Id));
         }
 
@@ -80,6 +84,7 @@ namespace Domain.Aggregates.User
         {
             Guard.Against.Null(profile, nameof(profile));
             Profile = profile;
+            DisplayName = profile.DisplayName;
         }
     }
 }

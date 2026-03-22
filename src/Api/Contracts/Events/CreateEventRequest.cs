@@ -4,11 +4,11 @@ namespace Api.Contracts.Events
     public sealed record CreateEventRequest(
         string Name,
         string VenueName,
-        string Country,
         string City,
-        string AddressLine1,
-        string? AddressLine2,
+        string Address,
+        string? GpsCoordinates,
         DateTimeOffset SalesStartDate,
         DateTimeOffset SalesEndDate,
-        DateTimeOffset EventDate);
+        DateTimeOffset StartDate,
+        DateTimeOffset EndDate);
 }

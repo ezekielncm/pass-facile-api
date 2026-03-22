@@ -1,5 +1,6 @@
 using Domain.Common;
 using Domain.DomainEvents.AccessControl;
+using Domain.Enums;
 using Domain.ValueObjects;
 
 namespace Domain.Aggregates.AccessControl
@@ -11,9 +12,8 @@ namespace Domain.Aggregates.AccessControl
         public Guid EventId { get; private set; }
         public Guid AgentId { get; private set; }
         public DeviceId DeviceId { get; private set; } = null!;
+        public DateTimeOffset StartedAt { get; private set; }
         public bool IsOffline { get; private set; }
-        public DateTimeOffset CreatedAt { get; private set; }
-        public DateTimeOffset? SyncedAt { get; private set; }
 
         public IReadOnlyCollection<ScanEvent> Events => _events.AsReadOnly();
 
@@ -27,13 +27,18 @@ namespace Domain.Aggregates.AccessControl
             AgentId = agentId;
             DeviceId = deviceId;
             IsOffline = isOffline;
-            CreatedAt = DateTimeOffset.UtcNow;
+            StartedAt = DateTimeOffset.UtcNow;
         }
 
         public static ScanSession Create(Guid eventId, Guid agentId, DeviceId deviceId, bool offline)
         {
             var session = new ScanSession(Guid.NewGuid(), eventId, agentId, deviceId, offline);
             return session;
+        }
+
+        public void StartOffline()
+        {
+            IsOffline = true;
         }
 
         public void AssignAgent(Guid agentId)
@@ -49,47 +54,49 @@ namespace Domain.Aggregates.AccessControl
             RaiseEvent(new AgentRevoked(Id, previous));
         }
 
-        public ScanEvent RecordScan(Guid ticketId, ScanResult result, DateTimeOffset now)
+        public ScanEvent RecordScan(string qrPayload, ScanResult result, DateTimeOffset now)
         {
-            // Invariant: un agent ne peut scanner que les événements auxquels il est assigné
             if (AgentId == Guid.Empty)
             {
                 throw new BusinessRuleValidationException("ScanSession.AgentNotAssigned",
                     "Un agent doit être assigné pour scanner des tickets.");
             }
 
-            var existing = _events.FirstOrDefault(e => e.TicketId == ticketId && e.Result.Value == "VALID");
+            var existing = _events.FirstOrDefault(e => e.QrPayload == qrPayload && e.Result.Status == ScanStatus.Valid);
             if (existing is not null)
             {
-                // Duplicate scan detected
-                var duplicate = ScanEvent.Create(Id, ticketId, ScanResult.From("DUPLICATE"), now);
+                var duplicate = ScanEvent.Create(Id, qrPayload, ScanResult.From("DUPLICATE"), now);
                 _events.Add(duplicate);
-                RaiseEvent(new DuplicateScanDetected(Id, ticketId));
+                RaiseEvent(new DuplicateScanDetected(Id, Guid.Empty));
                 return duplicate;
             }
 
-            // Un scan invalide ne modifie pas l'état du Ticket → ici, on se contente d’enregistrer.
-            var scanEvent = ScanEvent.Create(Id, ticketId, result, now);
+            var scanEvent = ScanEvent.Create(Id, qrPayload, result, now);
             _events.Add(scanEvent);
 
-            RaiseEvent(new TicketScanned(Id, ticketId, result));
+            RaiseEvent(new TicketScanned(Id, Guid.Empty, result));
             return scanEvent;
         }
 
-        public void MarkOfflineSyncCompleted(DateTimeOffset now)
+        public void Sync(IEnumerable<ScanEvent> scans, DateTimeOffset now)
         {
             if (!IsOffline)
             {
                 return;
             }
 
-            if (now - CreatedAt > TimeSpan.FromHours(24))
+            if (now - StartedAt > TimeSpan.FromHours(24))
             {
                 throw new BusinessRuleValidationException("ScanSession.SyncTooLate",
                     "Une ScanSession hors ligne doit être synchronisée dans les 24h.");
             }
 
-            SyncedAt = now;
+            foreach (var scan in scans)
+            {
+                scan.MarkSynced(now);
+                _events.Add(scan);
+            }
+
             RaiseEvent(new OfflineSyncCompleted(Id));
         }
     }
@@ -97,26 +104,32 @@ namespace Domain.Aggregates.AccessControl
     public sealed class ScanEvent : Entity<Guid>
     {
         public Guid ScanSessionId { get; private set; }
-        public Guid TicketId { get; private set; }
+        public string QrPayload { get; private set; } = null!;
         public ScanResult Result { get; private set; } = null!;
         public DateTimeOffset ScannedAt { get; private set; }
+        public DateTimeOffset? SyncedAt { get; private set; }
 
         // EF
         private ScanEvent() { }
 
-        private ScanEvent(Guid id, Guid scanSessionId, Guid ticketId, ScanResult result, DateTimeOffset scannedAt)
+        private ScanEvent(Guid id, Guid scanSessionId, string qrPayload, ScanResult result, DateTimeOffset scannedAt)
             : base(id)
         {
             ScanSessionId = scanSessionId;
-            TicketId = ticketId;
+            QrPayload = qrPayload;
             Result = result;
             ScannedAt = scannedAt;
         }
 
-        public static ScanEvent Create(Guid scanSessionId, Guid ticketId, ScanResult result, DateTimeOffset at)
+        public static ScanEvent Create(Guid scanSessionId, string qrPayload, ScanResult result, DateTimeOffset at)
         {
-            return new ScanEvent(Guid.NewGuid(), scanSessionId, ticketId, result, at);
+            Guard.Against.NullOrEmpty(qrPayload, nameof(qrPayload));
+            return new ScanEvent(Guid.NewGuid(), scanSessionId, qrPayload, result, at);
+        }
+
+        internal void MarkSynced(DateTimeOffset now)
+        {
+            SyncedAt = now;
         }
     }
 }
-
