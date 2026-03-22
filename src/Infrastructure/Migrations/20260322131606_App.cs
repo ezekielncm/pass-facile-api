@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,31 +7,35 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AppMigration : Migration
+    public partial class App : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:PostgresExtension:hstore", ",,");
+
             migrationBuilder.CreateTable(
                 name: "Events",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrganizerId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     Slug = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: false),
+                    CoverImageUrl = table.Column<string>(type: "text", nullable: true),
                     Venue_Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Venue_AddressLine1 = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
-                    Venue_AddressLine2 = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
                     Venue_City = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Venue_Country = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Venue_Address = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    Venue_GpsCoordinates = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    StartDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    EndDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     SalesPeriod_StartDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     SalesPeriod_EndDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Capacity = table.Column<int>(type: "integer", nullable: false),
-                    EventDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    CoverImageUrl = table.Column<string>(type: "text", nullable: true),
-                    IsPublished = table.Column<bool>(type: "boolean", nullable: false),
-                    SalesClosed = table.Column<bool>(type: "boolean", nullable: false)
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -42,11 +47,13 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    RecipientPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Channel = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Template = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Recipient = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    IsOptOut = table.Column<bool>(type: "boolean", nullable: false),
-                    IsQueued = table.Column<bool>(type: "boolean", nullable: false)
+                    TemplateId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Payload = table.Column<Dictionary<string, string>>(type: "hstore", nullable: false),
+                    ScheduledAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -58,11 +65,13 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Code = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Used = table.Column<bool>(type: "boolean", nullable: false)
+                    UsedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    IsUsed = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -74,11 +83,20 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    BuyerPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    CategoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    EventId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PromoCodeId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    Subtotal_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Subtotal_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    Fees_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Fees_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
                     Total_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Total_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
-                    ServiceFee_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    ServiceFee_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false)
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    ReservedUntil = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -94,7 +112,8 @@ namespace Infrastructure.Migrations
                     Balance_Available_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Balance_Available_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
                     Balance_Pending_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    Balance_Pending_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false)
+                    Balance_Pending_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -109,9 +128,8 @@ namespace Infrastructure.Migrations
                     EventId = table.Column<Guid>(type: "uuid", nullable: false),
                     AgentId = table.Column<Guid>(type: "uuid", nullable: false),
                     DeviceId = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    IsOffline = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    SyncedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                    StartedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsOffline = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -123,12 +141,14 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Reference = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     OrderId = table.Column<Guid>(type: "uuid", nullable: false),
                     EventId = table.Column<Guid>(type: "uuid", nullable: false),
-                    IsIssued = table.Column<bool>(type: "boolean", nullable: false),
-                    IsRevoked = table.Column<bool>(type: "boolean", nullable: false),
-                    IsUsed = table.Column<bool>(type: "boolean", nullable: false)
+                    CategoryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    BuyerPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    BuyerName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Reference = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    IssuedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -141,12 +161,14 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    DisplayName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     Profile_DisplayName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     Profile_Bio = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     Profile_LogoUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     Profile_BannerUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     Profile_Slug = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    PhoneVerified = table.Column<bool>(type: "boolean", nullable: false)
+                    IsVerified = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -160,7 +182,10 @@ namespace Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     EventId = table.Column<Guid>(type: "uuid", nullable: false),
                     Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    DiscountAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    DiscountType = table.Column<int>(type: "integer", nullable: false),
+                    Value = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    MaxUses = table.Column<int>(type: "integer", nullable: false),
+                    UsedCount = table.Column<int>(type: "integer", nullable: false),
                     ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
@@ -182,9 +207,13 @@ namespace Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     EventId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Price_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Price_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
                     Quota = table.Column<int>(type: "integer", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                    SoldCount = table.Column<int>(type: "integer", nullable: false),
+                    FeePolicy = table.Column<int>(type: "integer", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -203,8 +232,10 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     NotificationRequestId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AttemptNumber = table.Column<int>(type: "integer", nullable: false),
+                    SentAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Success = table.Column<bool>(type: "boolean", nullable: false),
-                    AttemptedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    ErrorMessage = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -223,10 +254,10 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OrderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Sku = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    TicketRef = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     UnitPrice_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    UnitPrice_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false)
+                    UnitPrice_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -245,11 +276,14 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OrderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Method = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    TransactionId = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Provider = table.Column<int>(type: "integer", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Amount_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Amount_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    TransactionId = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
+                    InitiatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ConfirmedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     FailureReason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
@@ -269,9 +303,12 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PaymentId = table.Column<Guid>(type: "uuid", nullable: false),
                     Amount_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Amount_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    ProcessedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -290,8 +327,14 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OrganizerWalletId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Amount_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    Amount_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    EventId = table.Column<Guid>(type: "uuid", nullable: false),
+                    GrossAmount_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    GrossAmount_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    PlatformFee_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    PlatformFee_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    NetAmount_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    NetAmount_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -313,8 +356,10 @@ namespace Infrastructure.Migrations
                     OrganizerWalletId = table.Column<Guid>(type: "uuid", nullable: false),
                     Amount_Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Amount_Currency = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    AccountId = table.Column<Guid>(type: "uuid", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    RequestedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ProcessedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -333,9 +378,13 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ScanSessionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TicketId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Result = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    ScannedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    QrPayload = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                    Result_Status = table.Column<int>(type: "integer", nullable: false),
+                    Result_TicketRef = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    Result_Category = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    Result_Message = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    ScannedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    SyncedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -354,7 +403,9 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     TicketId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Payload = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false)
+                    Payload = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                    GeneratedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
