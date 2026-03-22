@@ -67,14 +67,14 @@ namespace Domain.Aggregates.AccessControl
             {
                 var duplicate = ScanEvent.Create(Id, qrPayload, ScanResult.From("DUPLICATE"), now);
                 _events.Add(duplicate);
-                RaiseEvent(new DuplicateScanDetected(Id, Guid.Empty));
+                RaiseEvent(new DuplicateScanDetected(Id, qrPayload));
                 return duplicate;
             }
 
             var scanEvent = ScanEvent.Create(Id, qrPayload, result, now);
             _events.Add(scanEvent);
 
-            RaiseEvent(new TicketScanned(Id, Guid.Empty, result));
+            RaiseEvent(new TicketScanned(Id, qrPayload, result));
             return scanEvent;
         }
 

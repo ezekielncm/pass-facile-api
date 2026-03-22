@@ -56,11 +56,11 @@ namespace Domain.Aggregates.Finance
             Balance = Balance.MovePendingToAvailable(pending);
         }
 
-        public void ReceiveRevenue(Money amount, Money platformFee, DateTimeOffset eventEndDate, DateTimeOffset now)
+        public void ReceiveRevenue(Guid orderId, Guid eventId, Money amount, Money platformFee, DateTimeOffset eventEndDate, DateTimeOffset now)
         {
             var net = Money.From(amount.Amount - platformFee.Amount, amount.Currency);
 
-            _fees.Add(FeeTransaction.Create(Id, Guid.Empty, Guid.Empty, amount, platformFee, net));
+            _fees.Add(FeeTransaction.Create(Id, orderId, eventId, amount, platformFee, net));
 
             if (now >= eventEndDate.AddHours(24))
             {
