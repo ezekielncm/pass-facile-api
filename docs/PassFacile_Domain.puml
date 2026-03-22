@@ -1,0 +1,661 @@
+@startuml PassFacile_DomainModel
+
+!theme plain
+skinparam linetype ortho
+skinparam ranksep 60
+skinparam nodesep 40
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam class {
+    BackgroundColor White
+    BorderColor #566573
+    BorderThickness 1.5
+    ArrowColor #566573
+    FontColor #1C2833
+    HeaderBackgroundColor White
+}
+
+' ══════════════════════════════════════════════════════
+' COLOR PACKAGES
+' ══════════════════════════════════════════════════════
+
+skinparam package {
+    BackgroundColor White
+    BorderColor #AAAAAA
+    FontStyle Bold
+    FontSize 12
+}
+
+' ══════════════════════════════════════════════════════
+' LEGEND STEREOTYPES → couleur par bounded context
+' ══════════════════════════════════════════════════════
+
+'skinparam class<<Identity>>      { HeaderBackgroundColor #E8DAEF  BorderColor #6C3483  FontColor #6C3483 }
+'skinparam class<<Event>>         { HeaderBackgroundColor #FDEBD0  BorderColor #D35400  FontColor #D35400 }
+'skinparam class<<Sales>>         { HeaderBackgroundColor #D5F5E3  BorderColor #1E8449  FontColor #1E8449 }
+'skinparam class<<Ticketing>>     { HeaderBackgroundColor #D6EAF8  BorderColor #1A5276  FontColor #1A5276 }
+'skinparam class<<AccessControl>> { HeaderBackgroundColor #FADBD8  BorderColor #922B21  FontColor #922B21 }
+'skinparam class<<Notification>>  { HeaderBackgroundColor #D1F2EB  BorderColor #17A589  FontColor #17A589 }
+'skinparam class<<Finance>>       { HeaderBackgroundColor #D6EAF8  BorderColor #1F618D  FontColor #1F618D }
+'skinparam class<<ValueObject>>   { HeaderBackgroundColor #F2F3F4  BorderColor #717D7E  FontColor #566573  BorderThickness 1 }
+'skinparam class<<DomainEvent>>   { HeaderBackgroundColor #FEF9E7  BorderColor #B7950B  FontColor #7D6608  BorderThickness 1 }
+
+' ══════════════════════════════════════════════════════
+' PACKAGE 1 — IDENTITY
+' ══════════════════════════════════════════════════════
+
+package "Identity" #E8DAEF {
+
+    class User <<Identity>> {
+        + id : Guid
+        + phoneNumber : PhoneNumber
+        + displayName : String
+        + role : UserRole
+        + isVerified : Boolean
+        + createdAt : DateTime
+        --
+        + register(phone: PhoneNumber) : User
+        + assignRole(role: UserRole) : void
+        + updateProfile(profile: UserProfile) : void
+    }
+
+    class OTPCode <<Identity>> {
+        + id : Guid
+        + userId : Guid
+        + code : String
+        + expiresAt : DateTime
+        + usedAt : DateTime?
+        + isUsed : Boolean
+        --
+        + verify(code: String) : Boolean
+        + isExpired() : Boolean
+    }
+
+    class RefreshToken <<Identity>> {
+        + token : String
+        + userId : Guid
+        + expiresAt : DateTime
+        + isRevoked : Boolean
+        --
+        + rotate() : RefreshToken
+        + revoke() : void
+    }
+
+    class PhoneNumber <<ValueObject>> {
+        + value : String
+        + countryCode : String
+        --
+        + isValid() : Boolean
+        + toE164() : String
+    }
+
+    class UserProfile <<ValueObject>> {
+        + bio : String
+        + logoUrl : String
+        + bannerUrl : String
+        + slug : String
+    }
+
+    enum UserRole {
+        Organizer
+        Agent
+        Admin
+    }
+
+    User "1" *-- "0..1" UserProfile
+    User "1" *-- "1" PhoneNumber
+    User "1" o-- "0..*" OTPCode
+    User "1" o-- "0..*" RefreshToken
+    User --> UserRole
+}
+
+' ══════════════════════════════════════════════════════
+' PACKAGE 2 — EVENT MANAGEMENT
+' ══════════════════════════════════════════════════════
+
+package "EventManagement" #FDEBD0 {
+
+    class Event <<Event>> {
+        + id : Guid
+        + organizerId : Guid
+        + name : String
+        + slug : EventSlug
+        + description : String
+        + coverImageUrl : String
+        + venue : Venue
+        + startDate : DateTime
+        + endDate : DateTime
+        + salesPeriod : SalesPeriod
+        + capacity : Capacity
+        + status : EventStatus
+        + createdAt : DateTime
+        --
+        + publish() : void
+        + unpublish() : void
+        + duplicate(newDates) : Event
+        + closeSalesIfExpired() : void
+        + availableQuota() : Int
+    }
+
+    class TicketCategory <<Event>> {
+        + id : Guid
+        + eventId : Guid
+        + name : String
+        + price : Money
+        + quota : Int
+        + soldCount : Int
+        + feePolicy : FeePolicy
+        + isActive : Boolean
+        + description : String
+        --
+        + deactivate() : void
+        + remainingQuota() : Int
+        + computeFinalPrice() : Money
+    }
+
+    class PromoCode <<Event>> {
+        + id : Guid
+        + eventId : Guid
+        + code : String
+        + discountType : DiscountType
+        + value : Decimal
+        + maxUses : Int
+        + usedCount : Int
+        + expiresAt : DateTime
+        --
+        + apply(price: Money) : Money
+        + isValid() : Boolean
+        + incrementUsage() : void
+    }
+
+    class EventSlug <<ValueObject>> {
+        + value : String
+        --
+        + generate(name: String) : EventSlug
+        + isUnique() : Boolean
+    }
+
+    class Venue <<ValueObject>> {
+        + name : String
+        + city : String
+        + address : String
+        + gpsCoordinates : String?
+    }
+
+    class SalesPeriod <<ValueObject>> {
+        + startDate : DateTime
+        + endDate : DateTime?
+        --
+        + isOpen() : Boolean
+        + isExpired() : Boolean
+    }
+
+    class Capacity <<ValueObject>> {
+        + total : Int
+        + usedCount : Int
+        --
+        + isFull() : Boolean
+        + isNearFull(threshold: Decimal) : Boolean
+    }
+
+    enum EventStatus {
+        Draft
+        Published
+        SalesClosed
+        Finished
+        Cancelled
+    }
+
+    enum FeePolicy {
+        BuyerPays
+        OrganizerPays
+    }
+
+    enum DiscountType {
+        Percent
+        Fixed
+    }
+
+    Event "1" *-- "1" EventSlug
+    Event "1" *-- "1" Venue
+    Event "1" *-- "1" SalesPeriod
+    Event "1" *-- "1" Capacity
+    Event --> EventStatus
+    Event "1" *-- "1..*" TicketCategory
+    Event "1" o-- "0..*" PromoCode
+    TicketCategory --> FeePolicy
+    TicketCategory *-- Money
+    PromoCode --> DiscountType
+}
+
+' ══════════════════════════════════════════════════════
+' PACKAGE 3 — SALES
+' ══════════════════════════════════════════════════════
+
+package "Sales" #D5F5E3 {
+
+    class Order <<Sales>> {
+        + id : Guid
+        + buyerPhone : PhoneNumber
+        + categoryId : Guid
+        + eventId : Guid
+        + promoCodeId : Guid?
+        + quantity : Int
+        + subtotal : Money
+        + fees : Money
+        + total : Money
+        + status : OrderStatus
+        + reservedUntil : DateTime
+        + createdAt : DateTime
+        --
+        + confirm() : void
+        + cancel() : void
+        + applyPromo(code: PromoCode) : void
+        + computeFees(policy: FeePolicy) : Money
+    }
+
+    class OrderItem <<Sales>> {
+        + id : Guid
+        + orderId : Guid
+        + ticketRef : TicketReference
+        + unitPrice : Money
+        + quantity : Int
+    }
+
+    class Payment <<Sales>> {
+        + id : Guid
+        + orderId : Guid
+        + provider : PaymentProvider
+        + phoneNumber : PhoneNumber
+        + amount : Money
+        + transactionId : TransactionId
+        + status : PaymentStatus
+        + initiatedAt : DateTime
+        + confirmedAt : DateTime?
+        --
+        + initiate() : void
+        + confirm(txId: TransactionId) : void
+        + fail(reason: String) : void
+    }
+
+    class Refund <<Sales>> {
+        + id : Guid
+        + orderId : Guid
+        + paymentId : Guid
+        + amount : Money
+        + reason : String
+        + status : RefundStatus
+        + processedAt : DateTime?
+        --
+        + process() : void
+    }
+
+    class Money <<ValueObject>> {
+        + amount : Decimal
+        + currency : String
+        --
+        + add(other: Money) : Money
+        + subtract(other: Money) : Money
+        + multiply(factor: Decimal) : Money
+    }
+
+    class TransactionId <<ValueObject>> {
+        + value : String
+        + provider : PaymentProvider
+    }
+
+    enum OrderStatus {
+        Pending
+        Reserved
+        Confirmed
+        Cancelled
+        Refunded
+    }
+
+    enum PaymentStatus {
+        Initiated
+        Confirmed
+        Failed
+        Expired
+    }
+
+    enum RefundStatus {
+        Requested
+        Processed
+        Failed
+    }
+
+    enum PaymentProvider {
+        OrangeMoney
+        MoovMoney
+    }
+
+    Order "1" *-- "1..*" OrderItem
+    Order "1" *-- "1" Payment
+    Order "1" o-- "0..1" Refund
+    Order --> OrderStatus
+    Order *-- Money
+    Payment --> PaymentStatus
+    Payment --> PaymentProvider
+    Payment *-- TransactionId
+    Refund --> RefundStatus
+}
+
+' ══════════════════════════════════════════════════════
+' PACKAGE 4 — TICKETING
+' ══════════════════════════════════════════════════════
+
+package "Ticketing" #D6EAF8 {
+
+    class Ticket <<Ticketing>> {
+        + id : Guid
+        + orderId : Guid
+        + eventId : Guid
+        + categoryId : Guid
+        + buyerPhone : PhoneNumber
+        + buyerName : String
+        + reference : TicketReference
+        + status : TicketStatus
+        + issuedAt : DateTime
+        --
+        + revoke() : void
+        + markUsed() : void
+    }
+
+    class QRCode <<Ticketing>> {
+        + id : Guid
+        + ticketId : Guid
+        + payload : QRCodePayload
+        + generatedAt : DateTime
+        + expiresAt : DateTime?
+        --
+        + generate(ticket: Ticket, secret: String) : QRCode
+        + toImage(format: String) : Bytes
+    }
+
+    class TicketReference <<ValueObject>> {
+        + value : String
+        --
+        + generate() : TicketReference
+        + isValid() : Boolean
+    }
+
+    class QRCodePayload <<ValueObject>> {
+        + ticketRef : String
+        + eventId : String
+        + categoryId : String
+        + signature : String
+        --
+        + sign(secret: String) : QRCodePayload
+        + verify(secret: String) : Boolean
+        + encode() : String
+    }
+
+    enum TicketStatus {
+        Issued
+        Used
+        Revoked
+    }
+
+    Ticket "1" *-- "1" QRCode
+    Ticket "1" *-- "1" TicketReference
+    Ticket --> TicketStatus
+    QRCode *-- QRCodePayload
+}
+
+' ══════════════════════════════════════════════════════
+' PACKAGE 5 — ACCESS CONTROL
+' ══════════════════════════════════════════════════════
+
+package "AccessControl" #FADBD8 {
+
+    class ScanSession <<AccessControl>> {
+        + id : Guid
+        + eventId : Guid
+        + agentId : Guid
+        + deviceId : DeviceId
+        + startedAt : DateTime
+        + isOffline : Boolean
+        --
+        + startOffline() : void
+        + sync(scans: ScanEvent[]) : SyncResult
+    }
+
+    class ScanEvent <<AccessControl>> {
+        + id : Guid
+        + sessionId : Guid
+        + qrPayload : String
+        + result : ScanResult
+        + scannedAt : DateTime
+        + syncedAt : DateTime?
+    }
+
+    class AgentAssignment <<AccessControl>> {
+        + id : Guid
+        + eventId : Guid
+        + agentId : Guid
+        + assignedAt : DateTime
+        + revokedAt : DateTime?
+        + isActive : Boolean
+        --
+        + revoke() : void
+    }
+
+    class OfflineBundle <<AccessControl>> {
+        + eventId : Guid
+        + tickets : QRCodePayload[]
+        + generatedAt : DateTime
+        + signature : String
+        + expiresAt : DateTime
+        --
+        + validate() : Boolean
+    }
+
+    class ScanResult <<ValueObject>> {
+        + status : ScanStatus
+        + ticketRef : String?
+        + category : String?
+        + message : String
+    }
+
+    class DeviceId <<ValueObject>> {
+        + value : String
+    }
+
+    enum ScanStatus {
+        Valid
+        Invalid
+        AlreadyUsed
+        Expired
+    }
+
+    ScanSession "1" *-- "1..*" ScanEvent
+    ScanSession *-- DeviceId
+    ScanEvent *-- ScanResult
+    ScanResult --> ScanStatus
+    OfflineBundle *-- QRCodePayload
+}
+
+' ══════════════════════════════════════════════════════
+' PACKAGE 6 — NOTIFICATIONS
+' ══════════════════════════════════════════════════════
+
+package "Notifications" #D1F2EB {
+
+    class NotificationRequest <<Notification>> {
+        + id : Guid
+        + recipientPhone : PhoneNumber
+        + channel : Channel
+        + templateId : String
+        + payload : Map<String, String>
+        + scheduledAt : DateTime?
+        + status : NotificationStatus
+        + createdAt : DateTime
+        --
+        + send() : void
+        + schedule(at: DateTime) : void
+        + cancel() : void
+    }
+
+    class DeliveryAttempt <<Notification>> {
+        + id : Guid
+        + notificationId : Guid
+        + attemptNumber : Int
+        + sentAt : DateTime
+        + success : Boolean
+        + errorMessage : String?
+    }
+
+    class MessageTemplate <<ValueObject>> {
+        + id : String
+        + bodyTemplate : String
+        + channel : Channel
+        --
+        + render(vars: Map) : String
+    }
+
+    enum Channel {
+        SMS
+        WhatsApp
+    }
+
+    enum NotificationStatus {
+        Queued
+        Sent
+        Failed
+        Cancelled
+    }
+
+    NotificationRequest "1" *-- "0..*" DeliveryAttempt
+    NotificationRequest --> Channel
+    NotificationRequest --> NotificationStatus
+    NotificationRequest *-- MessageTemplate
+}
+
+' ══════════════════════════════════════════════════════
+' PACKAGE 7 — FINANCE
+' ══════════════════════════════════════════════════════
+
+package "Finance" #D6EAF8 {
+
+    class OrganizerWallet <<Finance>> {
+        + id : Guid
+        + organizerId : Guid
+        + availableBalance : Money
+        + pendingBalance : Money
+        + currency : String
+        --
+        + credit(amount: Money) : void
+        + debit(amount: Money) : void
+        + releasePending(eventId: Guid) : void
+        + requestWithdrawal(amount: Money) : WithdrawalRequest
+    }
+
+    class WithdrawalRequest <<Finance>> {
+        + id : Guid
+        + walletId : Guid
+        + amount : Money
+        + accountId : Guid
+        + status : WithdrawalStatus
+        + requestedAt : DateTime
+        + processedAt : DateTime?
+        --
+        + process() : void
+        + fail(reason: String) : void
+    }
+
+    class FeeTransaction <<Finance>> {
+        + id : Guid
+        + orderId : Guid
+        + eventId : Guid
+        + grossAmount : Money
+        + platformFee : Money
+        + netAmount : Money
+        + createdAt : DateTime
+    }
+
+    class WalletBalance <<ValueObject>> {
+        + available : Money
+        + pending : Money
+        --
+        + total() : Money
+        + canWithdraw(amount: Money) : Boolean
+    }
+
+    enum WithdrawalStatus {
+        Requested
+        Processing
+        Completed
+        Failed
+    }
+
+    OrganizerWallet "1" *-- "1" WalletBalance
+    OrganizerWallet "1" o-- "0..*" WithdrawalRequest
+    OrganizerWallet "1" o-- "0..*" FeeTransaction
+    WithdrawalRequest --> WithdrawalStatus
+}
+
+' ══════════════════════════════════════════════════════
+' CROSS-CONTEXT RELATIONS (dashed = référence par ID)
+' ══════════════════════════════════════════════════════
+
+User           ..>  Event             : creates >
+User           ..>  AgentAssignment   : assigned via >
+Event          ..>  TicketCategory    : owns >
+Order          ..>  TicketCategory    : references >
+Order          ..>  PromoCode         : uses >
+Payment        ..>  Order             : settles >
+Ticket         ..>  Order             : issued from >
+Ticket         ..>  Event             : for >
+ScanEvent      ..>  Ticket            : validates >
+AgentAssignment ..> Event             : grants access to >
+NotificationRequest ..> Ticket        : delivers >
+FeeTransaction ..>  Order             : tracks >
+OrganizerWallet ..> User             : belongs to >
+WithdrawalRequest ..> PaymentProvider : paid via >
+
+' ══════════════════════════════════════════════════════
+' DOMAIN EVENTS (note style)
+' ══════════════════════════════════════════════════════
+
+note top of Order
+  <b>Domain Events</b>
+  OrderCreated
+  PaymentConfirmed
+  OrderCancelled
+  RefundIssued
+end note
+
+note top of Event
+  <b>Domain Events</b>
+  EventCreated
+  EventPublished
+  EventDuplicated
+  SalesClosedAutomatically
+end note
+
+note top of Ticket
+  <b>Domain Events</b>
+  TicketIssued
+  QRCodeGenerated
+  TicketDelivered
+  TicketRevoked
+end note
+
+note top of ScanSession
+  <b>Domain Events</b>
+  TicketScanned
+  DuplicateScanDetected
+  OfflineSyncCompleted
+end note
+
+note top of OrganizerWallet
+  <b>Domain Events</b>
+  RevenueReceived
+  WithdrawalRequested
+  WithdrawalProcessed
+end note
+
+@enduml
