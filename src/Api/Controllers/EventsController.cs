@@ -1,4 +1,5 @@
 ﻿using Api.Contracts.Events;
+using Application.Events.Commands.PatchEvent;
 using Application.Events.Commands.PostEvent;
 using Application.Events.Commands.UpdateEvent;
 using Application.Events.Queries.GetEventPublish;
@@ -90,6 +91,21 @@ namespace Api.Controllers
                 rq.SalesEndDate,
                 rq.StartDate,
                 rq.EndDate);
+            var result = await _mediator.Send(cmd, CancellationToken.None);
+            return result.Match<IActionResult>(
+                onSuccess: dto => Ok(dto),
+                onFailure: error => error.Code switch
+                {
+                    var c when c.Contains("NotFound") => NotFound(error),
+                    _ => BadRequest(new { error.Code, error.Message })
+                });
+        }
+        [HttpPatch("{id:guid}/status")]
+        public async Task<IActionResult> EventStatus(
+            Guid id,
+            [FromBody]EventStatusRequest rq)
+        {
+            var cmd = new PatchEventCommand(id, rq.Status);
             var result = await _mediator.Send(cmd, CancellationToken.None);
             return result.Match<IActionResult>(
                 onSuccess: dto => Ok(dto),
