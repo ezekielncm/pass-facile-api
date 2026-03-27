@@ -32,7 +32,7 @@ jobs:
       uses: azure/container-apps-deploy-action@v1
       with:
         appSourcePath: ${{ github.workspace }}/src/Api
-        dockerfilePath: ${{ github.workspace }}/src/Api/Dockerfile
+        dockerfilePath: Dockerfile
         acrName: ${{ env.CONTAINER_REGISTRY_NAME }}
         acrUsername: ${{ secrets.registry20260327212018_USERNAME_003D }}
         acrPassword: ${{ secrets.registry20260327212018_PASSWORD_003D }}
