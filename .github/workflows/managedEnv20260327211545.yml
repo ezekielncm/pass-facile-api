@@ -2,9 +2,11 @@ on:
   push:
     branches:
     - master
+
 permissions:
   id-token: write
   contents: read
+
 env:
   DOTNET_CORE_VERSION: 10.0.x
   CONTAINER_APP_NAME: api-container-app
@@ -12,31 +14,60 @@ env:
   RESOURCE_GROUP: api-app-20260325003357ResourceGroup
   CONTAINER_REGISTRY_NAME: registry20260327212018
   CONTAINER_REGISTRY_LOGIN_SERVER: registry20260327212018.azurecr.io
+
 jobs:
   BuildAndDeployContainerApp:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout source code
-      uses: actions/checkout@v4
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
-    - name: Azure login
-      uses: azure/login@v2
-      with:
-        client-id: ${{ vars.managedEnv20260327211545_CLIENT_ID_003D }}
-        tenant-id: ${{ vars.managedEnv20260327211545_TENANT_ID_003D }}
-        subscription-id: ${{ vars.managedEnv20260327211545_SUBSCRIPTION_ID_003D }}
-    - name: Container App deploy
-      uses: azure/container-apps-deploy-action@v1
-      with:
-        appSourcePath: ${{ github.workspace }}
-        dockerfilePath: src/Api/Dockerfile
-        acrName: ${{ env.CONTAINER_REGISTRY_NAME }}
-        acrUsername: ${{ secrets.registry20260327212018_USERNAME_003D }}
-        acrPassword: ${{ secrets.registry20260327212018_PASSWORD_003D }}
-        imageToBuild: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}
-        containerAppName: ${{ env.CONTAINER_APP_NAME }}
-        containerAppEnvironment: ${{ env.CONTAINER_APP_ENVIRONMENT_NAME }}
-        resourceGroup: ${{ env.RESOURCE_GROUP }}
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.managedEnv20260327211545_CLIENT_ID_003D }}
+          tenant-id: ${{ vars.managedEnv20260327211545_TENANT_ID_003D }}
+          subscription-id: ${{ vars.managedEnv20260327211545_SUBSCRIPTION_ID_003D }}
+
+      - name: Deploy Container App
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }}
+          dockerfilePath: src/Api/Dockerfile
+          acrName: ${{ env.CONTAINER_REGISTRY_NAME }}
+          acrUsername: ${{ secrets.registry20260327212018_USERNAME_003D }}
+          acrPassword: ${{ secrets.registry20260327212018_PASSWORD_003D }}
+          imageToBuild: ${{ env.CONTAINER_REGISTRY_LOGIN_SERVER }}/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}
+          containerAppName: ${{ env.CONTAINER_APP_NAME }}
+          containerAppEnvironment: ${{ env.CONTAINER_APP_ENVIRONMENT_NAME }}
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+
+      - name: Configure Container App runtime settings
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az containerapp secret set \
+              --name ${{ env.CONTAINER_APP_NAME }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --secrets \
+                jwt-secret='${{ secrets.JWT_SECRET }}' \
+                default-connection='${{ secrets.DEFAULT_CONNECTION_STRING }}' \
+                identity-connection='${{ secrets.IDENTITY_CONNECTION_STRING }}'
+
+            az containerapp update \
+              --name ${{ env.CONTAINER_APP_NAME }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --target-port 8080 \
+              --ingress external \
+              --set-env-vars \
+                ASPNETCORE_URLS=http://+:8080 \
+                JwtSettings__Issuer=PfApp \
+                JwtSettings__Audience=PfAppUsers \
+                ConnectionStrings__DefaultConnection=secretref:default-connection \
+                ConnectionStrings__IdentityConnection=secretref:identity-connection \
+                JwtSettings__SecretKey=secretref:jwt-secret
