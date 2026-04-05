@@ -1,4 +1,5 @@
 ﻿using Api.Contracts.Events;
+using Application.Events.Commands.DuplicateEvent;
 using Application.Events.Commands.PatchEvent;
 using Application.Events.Commands.PostEvent;
 using Application.Events.Commands.UpdateEvent;
@@ -51,7 +52,7 @@ namespace Api.Controllers
                 });
         }
         /// <summary>
-        /// retrouver un event publié par son slug. Le slug est une chaîne de caractères unique qui identifie un événement de manière lisible. Par exemple, si un événement s'appelle "Concert de rock à Paris", son slug pourrait être "concert-de-rock-a-paris". Cette méthode permet de récupérer les détails d'un événement publié en utilisant son slug dans l'URL. Si l'événement n'est pas trouvé, elle retourne une réponse 404 Not Found.
+        /// retrouver un event publié par son slug.
         /// </summary>
         /// <param name="slug"></param>
         /// <returns></returns>
@@ -100,6 +101,12 @@ namespace Api.Controllers
                     _ => BadRequest(new { error.Code, error.Message })
                 });
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="rq"></param>
+        /// <returns></returns>
         [HttpPatch("{id:guid}/status")]
         public async Task<IActionResult> EventStatus(
             Guid id,
@@ -115,5 +122,40 @@ namespace Api.Controllers
                     _ => BadRequest(new { error.Code, error.Message })
                 });
         }
-    }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPost("{id:guid}/duplicate")]
+        public async Task<IActionResult> DuplicateEvent(
+            Guid id,
+            [FromQuery] DateTimeOffset newStartDate,
+            [FromQuery] DateTimeOffset newEndDate)
+        {
+            var cmd = new DuplicateEventCommand(
+                id,
+                newStartDate,
+                newEndDate);
+            var result = await _mediator.Send(cmd, CancellationToken.None);
+            return result.Match<IActionResult>(
+                onSuccess: dto => CreatedAtAction(nameof(PostEvent), new { id = dto.Id }, dto),
+                onFailure: error => error.Code switch
+                {
+                    var c when c.Contains("NotFound") => NotFound(error),
+                    _ => BadRequest(new { error.Code, error.Message })
+                });
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="rq"></param>
+        /// <returns></returns>
+        [HttpPost("{id:guid}/categories")]
+        public async Task<IActionResult> AddCategoryToEvent(
+            Guid id,
+            [FromBody] AddCategoryRequest rq)
+        {
+        }
 }

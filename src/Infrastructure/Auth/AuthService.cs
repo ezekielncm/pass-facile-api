@@ -39,28 +39,45 @@ namespace Infrastructure.Auth
         public async Task<(bool, string?)> RequestOtpAsync(string phoneNumber)
         {
             // Créer le user s'il n'existe pas (first login = auto-register)
-            var user = await _userManager.Users
-                .FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
-
-            if (user is null)
+            try
             {
-                _logger.LogInformation("new user{phoneNumber}", phoneNumber);
+                var user = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
 
-                user = new AppUser
+
+                if (user is null)
                 {
-                    UserName = phoneNumber,
-                    PhoneNumber = phoneNumber
-                };
-                var result = await _userManager.CreateAsync(user);
-                if (!result.Succeeded)
-                    return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    _logger.LogInformation("new user{phoneNumber}", phoneNumber);
 
-                //await _userManager.AddToRoleAsync(user,"User"); // rôle par défaut
+                    user = new AppUser
+                    {
+                        UserName = phoneNumber,
+                        PhoneNumber = phoneNumber
+                    };
+                    try
+                    {
+                        var result = await _userManager.CreateAsync(user);
+                        if (!result.Succeeded)
+                            return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "Error creating user with phone number {PhoneNumber}", phoneNumber);
+                        return (false, "Error creating user.");
+                    }
+
+                    //await _userManager.AddToRoleAsync(user,"User"); // rôle par défaut
+                }
+
+
+                if (!user.IsActive)
+                    return (false, "Account disabled.");
             }
-
-            if (!user.IsActive)
-                return (false, "Account disabled.");
-
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error accessing user with phone number {PhoneNumber}", phoneNumber);
+                return (false, "Error accessing user data.");
+            }
             var otp = await _otpService.GenerateAndStoreOtpAsync(phoneNumber);
 
             // En production → SMS. En dev → log.
@@ -83,7 +100,7 @@ namespace Infrastructure.Auth
             if (!valid)
                 return (false, null, "Invalid or expired OTP.");
 
-            var user = await _userManager.Users
+            var user = await _userManager.Users  
                 .FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
 
             if (user is null || !user.IsActive)
