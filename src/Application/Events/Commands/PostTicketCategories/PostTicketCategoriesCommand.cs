@@ -1,12 +1,13 @@
-﻿//using Application.Common.Models;
-//using Domain.Aggregates.Event;
-//using MediatR;
-//using System;
-//using System.Collections.Generic;
-//using System.Text;
+using Application.Common.Models;
+using Application.Events.DTOs;
+using MediatR;
 
-//namespace Application.Events.Commands.PostTicketCategories
-//{
-//    public sealed record PostTicketCategoriesCommand(Guid EventId, List<TicketCategoryDto> TicketCategories)
-//        : IRequest<Result<List<TicketCategoryDto>>>;
-//}
+namespace Application.Events.Commands.PostTicketCategories;
+
+public sealed record PostTicketCategoryCommand(
+    Guid EventId,
+    string Name,
+    decimal Price,
+    int Quota,
+    string? Description,
+    string FeePolicy) : IRequest<Result<CategoryDto>>;

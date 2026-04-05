@@ -101,6 +101,12 @@ namespace Domain.Aggregates.Event
             RaiseEvent(new CategoryAdded(Id, category.Id));
         }
 
+        public void AddPromoCode(PromoCode promoCode)
+        {
+            Guard.Against.Null(promoCode, nameof(promoCode));
+            _promoCodes.Add(promoCode);
+        }
+
         public void Publish()
         {
             if (Status == EventStatus.Published)
