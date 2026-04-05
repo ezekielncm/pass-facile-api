@@ -1,41 +1,50 @@
-﻿using Application.Common.Interfaces.Persistence;
+using Application.Common.Interfaces.Persistence;
 using Application.Common.Models;
 using Application.Events.DTOs;
 using Domain.ValueObjects;
+using Domain.ValueObjects.Identities;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Application.Events.Queries.GetEventPublish
+namespace Application.Events.Queries.GetEventPublish;
+
+public sealed class GetEventPublishQueryHandler
+    : IRequestHandler<GetEventPublishQuery, Result<EventPublishDto>>
 {
-    public sealed class GetEventPublishQueryHandler
-        : IRequestHandler<GetEventPublishQuery, Result<EventDto>>
+    private readonly ILogger<GetEventPublishQueryHandler> _logger;
+    private readonly IEventRepository _eventRepository;
+    private readonly IUserRepository _userRepository;
+
+    public GetEventPublishQueryHandler(
+        ILogger<GetEventPublishQueryHandler> logger,
+        IEventRepository eventRepository,
+        IUserRepository userRepository)
     {
-        private readonly ILogger<GetEventPublishQueryHandler> _logger;
-        private readonly IEventRepository _eventRepository;
-        public GetEventPublishQueryHandler(ILogger<GetEventPublishQueryHandler> logger, IEventRepository eventRepository)
+        _logger = logger;
+        _eventRepository = eventRepository;
+        _userRepository = userRepository;
+    }
+
+    public async Task<Result<EventPublishDto>> Handle(GetEventPublishQuery query, CancellationToken cancellationToken)
+    {
+        var slug = EventSlug.Create(query.Slug);
+        var @event = await _eventRepository.GetBySlugAsync(slug, cancellationToken);
+
+        if (@event is null || !@event.IsPublished)
         {
-            _logger = logger;
-            _eventRepository = eventRepository;
+            _logger.LogWarning("Événement avec le slug {Slug} introuvable ou non publié", query.Slug);
+            return Result<EventPublishDto>.Failure(Error.NotFound("Event", query.Slug));
         }
-        public async Task<Result<EventDto>> Handle(GetEventPublishQuery cmd, CancellationToken cancellationToken)
-        {
-            var slug = EventSlug.Create(cmd.Slug);
-            var @event = await _eventRepository.GetBySlugAsync(slug, cancellationToken);
-            if (@event is null)
-            {
-                _logger.LogWarning("Event with slug {Slug} not found", cmd.Slug);
-                return Result<EventDto>.Failure(Error.NotFound("Event not found", "Event"));
-            }
-            if (!@event.IsPublished)
-            {
-                _logger.LogWarning("Event with slug {Slug} is not published", cmd.Slug);
-                return Result<EventDto>.Failure(Error.Validation("Event is not published"));
-            } 
-            _logger.LogInformation("Event with slug {Slug} found and published", cmd.Slug);
-            return EventDto.FromDomain(@event);
-        }
+
+        var eventDto = EventDto.FromDomain(@event);
+        var categories = @event.Categories.Select(CategoryDto.FromDomain).ToList().AsReadOnly();
+
+        OrganizerProfileDto? organizer = null;
+        var organizerId = UserId.FromGuid(@event.OrganizerId);
+        var user = await _userRepository.GetByIdAsync(organizerId, cancellationToken);
+        if (user is not null)
+            organizer = OrganizerProfileDto.FromDomain(user);
+
+        return new EventPublishDto(eventDto, categories, organizer);
     }
 }

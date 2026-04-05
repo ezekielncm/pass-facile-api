@@ -36,7 +36,7 @@ namespace Infrastructure.Auth
         }
 
         // Étape 1 : demande d'OTP
-        public async Task<(bool, string?)> RequestOtpAsync(string phoneNumber)
+        public async Task<(bool Success, string? OtpId, DateTimeOffset? ExpiresAt, string? Error)> RequestOtpAsync(string phoneNumber)
         {
             // Créer le user s'il n'existe pas (first login = auto-register)
             try
@@ -58,12 +58,12 @@ namespace Infrastructure.Auth
                     {
                         var result = await _userManager.CreateAsync(user);
                         if (!result.Succeeded)
-                            return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
+                            return (false, null, null, string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
                     catch (Exception e)
                     {
                         _logger.LogError(e, "Error creating user with phone number {PhoneNumber}", phoneNumber);
-                        return (false, "Error creating user.");
+                        return (false, null, null, "Error creating user.");
                     }
 
                     //await _userManager.AddToRoleAsync(user,"User"); // rôle par défaut
@@ -71,12 +71,12 @@ namespace Infrastructure.Auth
 
 
                 if (!user.IsActive)
-                    return (false, "Account disabled.");
+                    return (false, null, null, "Account disabled.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error accessing user with phone number {PhoneNumber}", phoneNumber);
-                return (false, "Error accessing user data.");
+                return (false, null, null, "Error accessing user data.");
             }
             var otp = await _otpService.GenerateAndStoreOtpAsync(phoneNumber);
 
@@ -90,21 +90,23 @@ namespace Infrastructure.Auth
                 _logger.LogError(e, "Error sending OTP SMS to {PhoneNumber}", phoneNumber);
             }
 
-            return (true, otp);
+            var otpId = Guid.NewGuid().ToString();
+            var expiresAt = DateTimeOffset.UtcNow.AddMinutes(5);
+            return (true, otpId, expiresAt, null);
         }
 
         // Étape 2 : vérification OTP → JWT
-        public async Task<(bool, string?, string?)> VerifyOtpAsync(string phoneNumber, string otp)
+        public async Task<(bool Success, string? AccessToken, string? RefreshToken, string? Error)> VerifyOtpAsync(string phoneNumber, string otp, string deviceId)
         {
             var valid = await _otpService.ValidateOtpAsync(phoneNumber, otp);
             if (!valid)
-                return (false, null, "Invalid or expired OTP.");
+                return (false, null, null, "Invalid or expired OTP.");
 
             var user = await _userManager.Users  
                 .FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
 
             if (user is null || !user.IsActive)
-                return (false, null, "User not found or disabled.");
+                return (false, null, null, "User not found or disabled.");
 
             // Marquer le numéro comme confirmé
             if (!user.PhoneNumberConfirmed)
@@ -114,30 +116,16 @@ namespace Infrastructure.Auth
             }
 
             var roles = await _userManager.GetRolesAsync(user);
-            var token = _jwtService.GenerateToken(user, roles);
+            var accessToken = _jwtService.GenerateToken(user, roles);
+            var refreshToken = Guid.NewGuid().ToString();
 
-            return (true, token, null);
+            return (true, accessToken, refreshToken, null);
         }
 
-        //public async Task<(bool Success, string? AccessToken, string? RefreshToken, string? Error)> RefreshTokenAsync(string refreshToken)
-        //{
-        //    var principal = _jwtService.GetPrincipalFromExpiredToken(refreshToken);
-        //    if (principal is null)
-        //        return (false, null, null, "Invalid token.");
-        //    var phoneNumber = principal.Identity?.Name;
-        //    if (phoneNumber is null)
-        //        return (false, null, null, "Invalid token.");
-        //    var user = await _userManager.Users
-        //        .FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
-        //    if (user is null || !user.IsActive)
-        //        return (false, null, null, "User not found or disabled.");
-        //    // Ici on devrait vérifier que le refresh token est valide et non révoqué
-        //    // (ex: stocké en base avec une date d'expiration)
-        //    // Pour simplifier, on suppose que le token est valide
-        //    var roles = await _userManager.GetRolesAsync(user);
-        //    var newAccessToken = _jwtService.GenerateToken(user, roles);
-        //    var newRefreshToken = Guid.NewGuid().ToString(); // Générer un nouveau refresh token
-        //    return (true, newAccessToken, newRefreshToken, null);
-        //}
+        public async Task<(bool Success, string? AccessToken, string? RefreshToken, string? Error)> RefreshTokenAsync(string refreshToken)
+        {
+            // TODO: Implement proper refresh token validation
+            return (false, null, null, "Refresh token support not yet implemented.");
+        }
     }
 }

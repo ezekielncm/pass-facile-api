@@ -1,46 +1,51 @@
-﻿using Application.Common.Interfaces.Auth;
+using Application.Common.Interfaces.Auth;
 using Application.Common.Interfaces.Persistence;
 using Application.Common.Models;
 using Application.Users.DTOs;
-using Domain.Aggregates.User;
 using Domain.ValueObjects;
-using Domain.ValueObjects.Identities;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Users.Commands.UpdateProfile;
 
-public sealed class UpdateProfileCommandHandle
+public sealed class UpdateProfileCommandHandler
     : IRequestHandler<UpdateProfileCommand, Result<UserDto>>
 {
-    private readonly IAuth _auth;
     private readonly IUserRepository _userRepository;
     private readonly ICurrentUserService _currentUserService;
-    private readonly ILogger _logger;
+    private readonly ILogger<UpdateProfileCommandHandler> _logger;
     private readonly IUnitOfWork _unitOfWork;
-    public UpdateProfileCommandHandle(IUserRepository userRepository, ILogger<UpdateProfileCommandHandle> logger, ICurrentUserService currentUserService, IAuth auth, IUnitOfWork unitOfWork)
+
+    public UpdateProfileCommandHandler(
+        IUserRepository userRepository,
+        ILogger<UpdateProfileCommandHandler> logger,
+        ICurrentUserService currentUserService,
+        IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _logger = logger;
         _currentUserService = currentUserService;
-        _auth = auth;
         _unitOfWork = unitOfWork;
     }
+
     public async Task<Result<UserDto>> Handle(UpdateProfileCommand cmd, CancellationToken cancellationToken)
     {
         var phone = _currentUserService.PhoneNumber;
         if (phone is null)
-        {
-            return Result<UserDto>.Failure(Error.NotFound("Numéro de téléphone introuvable.",cmd));
-        }
+            return Result<UserDto>.Failure(Error.Validation("Numéro de téléphone introuvable."));
+
         var phoneNumber = new PhoneNumber(phone);
+        var user = await _userRepository.GetByPhoneNumberAsync(phoneNumber, cancellationToken);
+
+        if (user is null)
+            return Result<UserDto>.Failure(Error.NotFound("User", phone));
+
         var profile = new UserProfile(cmd.DisplayName, cmd.Bio, cmd.LogoUrl, cmd.BannerUrl, cmd.Slug);
-        var user = User.Register(phoneNumber, profile);
-        user.SetContextRole("Organisateur", "Organisateur");
-        user.MarkOtpVerified();
-        await _userRepository.AddAsync(user,CancellationToken.None);
+        user.UpdateProfile(profile);
+
+        await _userRepository.UpdateAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        var result = UserDto.FromDomain(user);
-        return result;
+
+        return UserDto.FromDomain(user);
     }
 }

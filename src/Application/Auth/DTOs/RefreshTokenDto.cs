@@ -1,15 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+namespace Application.Auth.DTOs;
 
-namespace Application.Auth.DTOs
-{
-    public sealed record RefreshTokenDto(
-        bool? Success,
-        string? AccessToken,
-        string? RefreshToken,
-        string? Error
-        )
-    {
-    }
-}
+public sealed record RefreshTokenDto(
+    string AccessToken,
+    string RefreshToken);
