@@ -1,27 +1,33 @@
-﻿using Application.Auth.DTOs;
+using Application.Auth.DTOs;
 using Application.Common.Interfaces.Auth;
 using Application.Common.Models;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Application.Auth.Commands.RefreshToken
+namespace Application.Auth.Commands.RefreshToken;
+
+public sealed class RefreshTokenCommandHandler
+    : IRequestHandler<RefreshTokenCommand, Result<RefreshTokenDto>>
 {
-    public sealed class RefreshTokenCommandHandle
-        :IRequestHandler<RefreshTokenCommand,Result<RefreshTokenDto>>
+    private readonly IAuth _auth;
+    private readonly ILogger<RefreshTokenCommandHandler> _logger;
+
+    public RefreshTokenCommandHandler(IAuth auth, ILogger<RefreshTokenCommandHandler> logger)
     {
-        private readonly IAuth _auth;
-        private readonly ILogger<RefreshTokenCommandHandle> _logger;
-        public RefreshTokenCommandHandle(IAuth auth,ILogger<RefreshTokenCommandHandle> logger)
+        _auth = auth;
+        _logger = logger;
+    }
+
+    public async Task<Result<RefreshTokenDto>> Handle(RefreshTokenCommand cmd, CancellationToken cancellationToken)
+    {
+        var result = await _auth.RefreshTokenAsync(cmd.RefreshToken);
+
+        if (!result.Success)
         {
-            _auth = auth;
-            _logger = logger;
+            _logger.LogWarning("Échec du rafraîchissement du token.");
+            return Result<RefreshTokenDto>.Failure(Error.Validation(result.Error ?? "Refresh token invalide ou expiré."));
         }
-        public async Task<Result<RefreshTokenDto>> Handle(RefreshTokenCommand cmd,CancellationToken cancellationToken)
-        {
-            return null;
-        }
+
+        return new RefreshTokenDto(result.AccessToken!, result.RefreshToken!);
     }
 }

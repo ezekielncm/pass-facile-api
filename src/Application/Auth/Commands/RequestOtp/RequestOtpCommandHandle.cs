@@ -1,23 +1,24 @@
-﻿using Application.Auth.DTOs;
+using Application.Auth.DTOs;
 using Application.Common.Interfaces.Auth;
 using Application.Common.Models;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Application.Auth.Commands.RequestOtp
+namespace Application.Auth.Commands.RequestOtp;
+
+public sealed class RequestOtpCommandHandler
+    : IRequestHandler<RequestOtpCommand, Result<RequestOtpDto>>
 {
-    public sealed class RequestOtpCommandHandle
-        : IRequestHandler<RequestOtpCommand, Result<RequestOtpDto>>
+    private readonly IAuth _auth;
+
+    public RequestOtpCommandHandler(IAuth auth) => _auth = auth;
+
+    public async Task<Result<RequestOtpDto>> Handle(RequestOtpCommand request, CancellationToken cancellationToken)
     {
-        IAuth _auth;
-        public RequestOtpCommandHandle(IAuth auth) => _auth = auth;
-        public async Task<Result<RequestOtpDto>> Handle(RequestOtpCommand request, CancellationToken cancellationToken)
-        {
-            var result = await _auth.RequestOtpAsync(request.PhoneNumber);
-            RequestOtpDto otpDto = new(result.Success, result.Error);
-            return otpDto;
-        }
+        var result = await _auth.RequestOtpAsync(request.PhoneNumber);
+
+        if (!result.Success)
+            return Result<RequestOtpDto>.Failure(Error.Validation(result.Error ?? "Échec de l'envoi de l'OTP."));
+
+        return new RequestOtpDto(result.OtpId!, result.ExpiresAt!.Value);
     }
 }
