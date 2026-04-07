@@ -1,6 +1,7 @@
 ﻿using Application.Common.Interfaces.Auth;
 using Application.Common.Interfaces.Services;
 using Infrastructure.Identity;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

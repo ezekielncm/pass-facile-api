@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Infrastructure.Auth
+namespace Infrastructure.Services
 {
     using Microsoft.Extensions.Options;
     using System.Net.Http.Headers;

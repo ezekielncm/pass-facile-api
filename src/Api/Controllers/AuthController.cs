@@ -51,7 +51,7 @@ namespace Api.Controllers
         public async Task<IActionResult> VerifyOtp(
             [FromBody] VerifyOtpRequest request)
         {
-            var command = new VerifyOtpCommand(request.PhoneNumber, request.Otp);
+            var command = new VerifyOtpCommand(request.OtpId, request.Code, request.DeviceId);
             var result = await _mediator.Send(command);
             return result.Match<IActionResult>(
                 onSuccess: Response => Ok(Response),

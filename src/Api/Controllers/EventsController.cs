@@ -28,18 +28,20 @@ namespace Api.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> PostEvent([FromBody] CreateEventRequest rq)
+        public async Task<IActionResult> PostEvent([FromBody] PostEventRequest rq)
         {
             var cmd = new PostEventCommand(
                 rq.Name,
-                rq.VenueName,
+                rq.Description,
+                rq.Venue,
                 rq.City,
-                rq.Address,
-                rq.GpsCoordinates,
-                rq.SalesStartDate,
-                rq.SalesEndDate,
-                rq.StartDate,
-                rq.EndDate);
+                rq.AddressLine1,
+                null,
+                DateTimeOffset.Parse(rq.StartDate),
+                DateTimeOffset.Parse(rq.EndDate),
+                //rq.StartDate,
+                rq.CoverImageUrl,
+                int.Parse(rq.Capacity));
 
             var result = await _mediator.Send(cmd, CancellationToken.None);
 
@@ -88,10 +90,10 @@ namespace Api.Controllers
                 rq.City,
                 rq.Address,
                 rq.GpsCoordinates,
+                null,
                 rq.SalesStartDate,
                 rq.SalesEndDate,
-                rq.StartDate,
-                rq.EndDate);
+                null);
             var result = await _mediator.Send(cmd, CancellationToken.None);
             return result.Match<IActionResult>(
                 onSuccess: dto => Ok(dto),
@@ -110,7 +112,7 @@ namespace Api.Controllers
         [HttpPatch("{id:guid}/status")]
         public async Task<IActionResult> EventStatus(
             Guid id,
-            [FromBody]EventStatusRequest rq)
+            [FromBody] EventStatusRequest rq)
         {
             var cmd = new PatchEventCommand(id, rq.Status);
             var result = await _mediator.Send(cmd, CancellationToken.None);
@@ -146,16 +148,17 @@ namespace Api.Controllers
                     _ => BadRequest(new { error.Code, error.Message })
                 });
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="rq"></param>
-        /// <returns></returns>
-        [HttpPost("{id:guid}/categories")]
-        public async Task<IActionResult> AddCategoryToEvent(
-            Guid id,
-            [FromBody] AddCategoryRequest rq)
-        {
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="rq"></param>
+        ///// <returns></returns>
+        //[HttpPost("{id:guid}/categories")]
+        //public async Task<IActionResult> AddCategoryToEvent(
+        //    Guid id,
+        //    [FromBody] AddCategoryRequest rq)
+        //{
+        //}
+    }
 }
