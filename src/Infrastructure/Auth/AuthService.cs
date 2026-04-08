@@ -4,9 +4,13 @@ using Infrastructure.Identity;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace Infrastructure.Auth
@@ -15,25 +19,28 @@ namespace Infrastructure.Auth
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IOtpService _otpService;
-        // private readonly ISmsService _smsService;
+        private readonly ISmsService _smsService;
         private readonly JwtTokenGenerator _jwtService;
         private readonly ILogger<AuthService> _logger;
-        private readonly IkkodiClient _client;
+        private readonly IHostEnvironment _env;
+        //private readonly IkkodiClient _client;
 
         public AuthService(
             UserManager<AppUser> userManager,
             IOtpService otpService,
-            //ISmsService smsService,
+            ISmsService smsService,
             JwtTokenGenerator jwtService,
-            IkkodiClient client,
-            ILogger<AuthService> logger)
+            //IkkodiClient client,
+            ILogger<AuthService> logger,
+            IHostEnvironment env)
         {
             _userManager = userManager;
             _otpService = otpService;
-            // _smsService = smsService;
+            _smsService = smsService;
             _jwtService = jwtService;
             _logger = logger;
-            _client = client;
+            _env = env;
+            //_client = client;
         }
 
         // Étape 1 : demande d'OTP
@@ -81,12 +88,18 @@ namespace Infrastructure.Auth
             }
             var otp = await _otpService.GenerateAndStoreOtpAsync(phoneNumber);
 
-            // En production → SMS. En dev → log.
-            //await _smsService.SendAsync(phoneNumber, $"Your verification code: {otp}. Valid 5 minutes.");
+            //En production → SMS.En dev → log.
+            
             try
             {
-                //await _client.SendSmsAsync($"226{phoneNumber}", $"Your verification code: {otp}. Valid 5 minutes.");
-            }catch(Exception e)
+                if (_env.IsProduction())
+                {
+                    //await _client.SendSmsAsync($"226{phoneNumber}", $"Your verification code: {otp}. Valid 5 minutes.");
+                    await _smsService.SendAsync($"226{phoneNumber}", $"Your verification code: {otp}. Valid 5 minutes.");
+                }
+                _logger.LogInformation("Sent OTP {otp} SMS to {PhoneNumber}", otp, phoneNumber);
+            }
+            catch (Exception e)
             {
                 _logger.LogError(e, "Error sending OTP SMS to {PhoneNumber}", phoneNumber);
             }
@@ -109,7 +122,7 @@ namespace Infrastructure.Auth
             if (user is null || !user.IsActive)
                 return (false, null, null, "User not found or disabled.");
 
-            // Marquer le numéro comme confirmé
+            // Marquer le numéro comme confirmé.
             if (!user.PhoneNumberConfirmed)
             {
                 user.PhoneNumberConfirmed = true;

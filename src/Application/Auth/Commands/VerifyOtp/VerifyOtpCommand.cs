@@ -5,6 +5,6 @@ using MediatR;
 namespace Application.Auth.Commands.VerifyOtp;
 
 public sealed record VerifyOtpCommand(
-    string OtpId,
+    string PhoneNumber,
     string Code,
     string DeviceId) : IRequest<Result<VerifyOtpDto>>;

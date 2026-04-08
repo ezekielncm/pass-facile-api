@@ -47,7 +47,7 @@ namespace Infrastructure
             services.AddMemoryCache();
             services.AddScoped<JwtTokenGenerator>();
             services.AddScoped<IOtpService, OtpService>();
-            //services.AddScoped<ISmsService, TwilioSmsService>();
+            services.AddScoped<ISmsService, SmsService>();
             services.AddScoped<IAuth, AuthService>();
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUserService, CurrentUserService>();

@@ -6,26 +6,22 @@ using Microsoft.Extensions.Options;
 using Twilio;
 using Twilio.Rest.Assistants.V1.Assistant;
 using Domain.ValueObjects;
-/*
+using Infrastructure.Services;
+
 namespace Infrastructure.Auth
 {
-    public class TwilioSmsService : ISmsService
+    public class SmsService : ISmsService
     {
-        private readonly TwilioSettings _settings;
+        private readonly IkkodiClient _clt;
 
-        public TwilioSmsService(IOptions<TwilioSettings> settings)
+        public SmsService(IkkodiClient clt)
         {
-            _settings = settings.Value;
-            TwilioClient.Init(_settings.AccountSid, _settings.AuthToken);
+            _clt = clt;
         }
 
         public async Task SendAsync(string phoneNumber, string message)
         {
-            await MessageResource.CreateAsync(
-                body: message,
-                from: new PhoneNumber(_settings.FromNumber),
-                to: new PhoneNumber(phoneNumber));
+            await _clt.SendSmsAsync(phoneNumber, message);
         }
     }
 }
-*/

@@ -23,7 +23,7 @@ public sealed class VerifyOtpCommandHandler
 
     public async Task<Result<VerifyOtpDto>> Handle(VerifyOtpCommand cmd, CancellationToken cancellationToken)
     {
-        var result = await _auth.VerifyOtpAsync(cmd.OtpId, cmd.Code, cmd.DeviceId);
+        var result = await _auth.VerifyOtpAsync(cmd.PhoneNumber, cmd.Code, cmd.DeviceId);
 
         if (!result.Success)
             return Result<VerifyOtpDto>.Failure(Error.Validation(result.Error ?? "OTP invalide."));
