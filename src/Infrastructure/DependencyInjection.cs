@@ -13,6 +13,7 @@ using Application.Common.Interfaces.Persistence;
 using Application.Common.Interfaces.Messaging;
 using Infrastructure.Services;
 using Microsoft.Extensions.Http;
+using Minio;
 namespace Infrastructure
 {
     public static class DependencyInjection
@@ -64,6 +65,25 @@ namespace Infrastructure
             services.AddScoped<INotificationRequestRepository, EfCoreNotificationRequestRepository>();
 
             services.AddHttpClient<IkkodiClient>();
+
+            // MinIO Storage
+            services.Configure<MinioSettings>(config.GetSection(MinioSettings.SectionName));
+
+            var minioSettings = config.GetSection(MinioSettings.SectionName).Get<MinioSettings>()
+                ?? new MinioSettings();
+
+            services.AddMinio(client =>
+            {
+                client.WithEndpoint(minioSettings.Endpoint)
+                      .WithCredentials(minioSettings.AccessKey, minioSettings.SecretKey)
+                      .WithSSL(false);
+                      
+
+                if (minioSettings.UseSsl)
+                    client.WithSSL();
+            });
+
+            services.AddScoped<IStorageService, MinioStorageService>();
 
             return services;
         }
