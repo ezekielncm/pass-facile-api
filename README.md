@@ -3,9 +3,10 @@
 [![CI](https://github.com/ezekielncm/pass-facile-api/actions/workflows/ci.yml/badge.svg)](https://github.com/ezekielncm/pass-facile-api/actions/workflows/ci.yml)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![MinIO](https://img.shields.io/badge/MinIO-S3--compatible-C72E49?logo=minio&logoColor=white)](https://min.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
 
-API **.NET 10** de billetterie événementielle, construite selon les principes de **Clean Architecture** avec **CQRS** (MediatR), authentification **JWT par OTP**, **Swagger/OpenAPI**, **Serilog** et **PostgreSQL**.
+API **.NET 10** de billetterie événementielle, construite selon les principes de **Clean Architecture** avec **CQRS** (MediatR), authentification **JWT par OTP**, **Swagger/OpenAPI**, **Serilog**, **PostgreSQL** et stockage d'objets **MinIO** (S3-compatible).
 
 ---
 
@@ -82,6 +83,7 @@ Chaque commande/requête traverse dans l'ordre :
 | FluentValidation | 12.1.1 | Application |
 | EF Core (Npgsql) | 10.0.0 | Infrastructure |
 | ASP.NET Core Identity | 10.0.3 | Infrastructure |
+| Minio | 7.0.0 | Infrastructure |
 | Serilog.AspNetCore | 10.0.0 | Api |
 | Swashbuckle (Swagger) | 6.5.0 | Api |
 | JWT Bearer Auth | 10.0.3 | Api |
@@ -141,7 +143,7 @@ pass-facile-api/
 |       |   +-- Repositories/        # EfCoreEventRepository, EfCoreOrderRepository, ...
 |       +-- Auth/                     # JwtTokenGenerator, OtpService, AuthService, CurrentUserService
 |       +-- Identity/                 # AppUser, AppRole, UserRoleManager
-|       +-- Services/                 # EventPublisher
+|       +-- Services/                 # EventPublisher, MinioStorageService, SmsService
 |       +-- Migrations/
 |       +-- DependencyInjection.cs
 |
@@ -228,6 +230,7 @@ La configuration est lue depuis (par ordre de priorité croissante) :
 |---------|-----------------|---------------------|
 | `JwtSettings` | `SecretKey`, `Issuer`, `Audience`, `ExpiryMinutes` | User Secrets / Env vars |
 | `ConnectionStrings` | `DefaultConnection`, `IdentityConnection` | User Secrets / Env vars |
+| `MinioSettings` | `Endpoint`, `AccessKey`, `SecretKey`, `DefaultBucket`, `UseSsl`, `PublicUrl` | User Secrets / Env vars |
 | `ExternalApis:Ikkodi` | `BaseUrl`, `ApiKey` | User Secrets / Env vars |
 | `Serilog` | Configuration standard Serilog | `appsettings.json` |
 
@@ -276,6 +279,9 @@ dotnet ef migrations add <NomMigration> --project src/Infrastructure --startup-p
 |---------|-------|-------------|-------------|
 | `postgres` | `postgres:16-alpine` | `5432` | Base de données PostgreSQL |
 | `pgadmin` | `dpage/pgadmin4:latest` | `5050` | Interface d'administration DB |
+| `minio` | `minio/minio:latest` | `9000`, `9001` | Stockage d'objets S3-compatible |
+| `rabbitmq` | `rabbitmq:3.12-management-alpine` | `5672`, `15672` | Message broker |
+| `seq` | `datalust/seq:2024.3` | `5341`, `5342` | Logging centralisé |
 | `api` | Build local (`src/Api/Dockerfile`) | `8080` | API ASP.NET Core |
 
 ### Commandes Docker

@@ -1,3 +1,4 @@
+using Application.Common.Interfaces.Services;
 using Application.Common.Models;
 using Application.Media.DTOs;
 using MediatR;
@@ -8,6 +9,7 @@ namespace Application.Media.Commands.UploadMedia;
 public sealed class UploadMediaCommandHandler
     : IRequestHandler<UploadMediaCommand, Result<MediaDto>>
 {
+    private readonly IStorageService _storageService;
     private readonly ILogger<UploadMediaCommandHandler> _logger;
 
     private static readonly HashSet<string> AllowedContentTypes =
@@ -15,8 +17,11 @@ public sealed class UploadMediaCommandHandler
 
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 Mo
 
-    public UploadMediaCommandHandler(ILogger<UploadMediaCommandHandler> logger)
+    public UploadMediaCommandHandler(
+        IStorageService storageService,
+        ILogger<UploadMediaCommandHandler> logger)
     {
+        _storageService = storageService;
         _logger = logger;
     }
 
@@ -31,11 +36,15 @@ public sealed class UploadMediaCommandHandler
         if (cmd.Context is not "event" and not "profile")
             return Result<MediaDto>.Failure(Error.Validation("Contexte invalide. Valeurs acceptées : event, profile."));
 
-        // Upload would be delegated to IStorageService
-        var publicId = $"{cmd.Context}/{Guid.NewGuid():N}";
-        var url = $"https://cdn.passfacile.com/{publicId}";
+        var objectName = $"{cmd.Context}/{Guid.NewGuid():N}{Path.GetExtension(cmd.FileName)}";
 
-        _logger.LogInformation("Média uploadé : {PublicId}", publicId);
-        return await Task.FromResult<Result<MediaDto>>(new MediaDto(url, publicId));
+        var url = await _storageService.UploadAsync(
+            cmd.File,
+            objectName,
+            cmd.ContentType,
+            cancellationToken: cancellationToken);
+
+        _logger.LogInformation("Média uploadé : {ObjectName}", objectName);
+        return new MediaDto(url, objectName);
     }
 }
