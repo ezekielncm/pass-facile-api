@@ -75,7 +75,9 @@ namespace Infrastructure
             services.AddMinio(client =>
             {
                 client.WithEndpoint(minioSettings.Endpoint)
-                      .WithCredentials(minioSettings.AccessKey, minioSettings.SecretKey);
+                      .WithCredentials(minioSettings.AccessKey, minioSettings.SecretKey)
+                      .WithSSL(false);
+                      
 
                 if (minioSettings.UseSsl)
                     client.WithSSL();
