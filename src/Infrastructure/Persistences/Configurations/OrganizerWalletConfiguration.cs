@@ -18,6 +18,10 @@ namespace Infrastructure.Persistences.Configurations
             builder.HasIndex(w => w.OrganizerId)
                 .IsUnique();
 
+            builder.Property(w => w.Currency)
+                .HasMaxLength(5)
+                .IsRequired();
+
             builder.OwnsOne(w => w.Balance, balance =>
             {
                 balance.OwnsOne(b => b.Available, money =>
@@ -62,6 +66,7 @@ namespace Infrastructure.Persistences.Configurations
             builder.HasKey(w => w.Id);
 
             builder.Property(w => w.OrganizerWalletId);
+            builder.Property(w => w.AccountId);
 
             builder.OwnsOne(w => w.Amount, money =>
             {
@@ -72,7 +77,8 @@ namespace Infrastructure.Persistences.Configurations
             builder.Property(w => w.Status)
                 .HasConversion<int>();
 
-            builder.Property(w => w.CreatedAt);
+            builder.Property(w => w.RequestedAt);
+            builder.Property(w => w.ProcessedAt);
         }
     }
 
@@ -85,11 +91,25 @@ namespace Infrastructure.Persistences.Configurations
             builder.HasKey(f => f.Id);
 
             builder.Property(f => f.OrganizerWalletId);
+            builder.Property(f => f.OrderId);
+            builder.Property(f => f.EventId);
 
-            builder.OwnsOne(f => f.Amount, money =>
+            builder.OwnsOne(f => f.GrossAmount, money =>
             {
-                money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("Amount_Amount").IsRequired();
-                money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("Amount_Currency").IsRequired();
+                money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("GrossAmount_Amount").IsRequired();
+                money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("GrossAmount_Currency").IsRequired();
+            });
+
+            builder.OwnsOne(f => f.PlatformFee, money =>
+            {
+                money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("PlatformFee_Amount").IsRequired();
+                money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("PlatformFee_Currency").IsRequired();
+            });
+
+            builder.OwnsOne(f => f.NetAmount, money =>
+            {
+                money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("NetAmount_Amount").IsRequired();
+                money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("NetAmount_Currency").IsRequired();
             });
 
             builder.Property(f => f.CreatedAt);

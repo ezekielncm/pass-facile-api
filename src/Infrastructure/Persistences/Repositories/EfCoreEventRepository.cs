@@ -30,6 +30,29 @@ namespace Infrastructure.Persistences.Repositories
                 .FirstOrDefaultAsync(e => e.Slug == slug, cancellationToken);
         }
 
+        public async Task<List<Event>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.Events
+                .Include(e => e.Categories)
+                .Include(e => e.PromoCodes)
+                .ToListAsync(cancellationToken);
+        }
+        public async Task<List<Event>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Events
+                .Include(e => e.Categories)
+                .Include(e => e.PromoCodes)
+                .Where(e => e.Categories.Any(c => c.Id == categoryId))
+                .ToListAsync(cancellationToken);
+        }
+        public async Task<List<Event>> GetByOrganizerIdAsync(Guid organizerId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Events
+                .Include(e => e.Categories)
+                .Include(e => e.PromoCodes)
+                .Where(e => e.OrganizerId == organizerId)
+                .ToListAsync(cancellationToken);
+        }
         public async Task AddAsync(Event @event, CancellationToken cancellationToken = default)
         {
             await _context.Events.AddAsync(@event, cancellationToken);

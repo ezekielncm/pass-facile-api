@@ -1,17 +1,20 @@
 using Domain.Common;
 using Domain.DomainEvents.Ticketing;
+using Domain.Enums;
 using Domain.ValueObjects;
 
 namespace Domain.Aggregates.Ticketing
 {
     public sealed class Ticket : AggregateRoot<Guid>
     {
-        public TicketReference Reference { get; private set; } = null!;
         public Guid OrderId { get; private set; }
         public Guid EventId { get; private set; }
-        public bool IsIssued { get; private set; }
-        public bool IsRevoked { get; private set; }
-        public bool IsUsed { get; private set; }
+        public Guid CategoryId { get; private set; }
+        public PhoneNumber BuyerPhone { get; private set; } = null!;
+        public string BuyerName { get; private set; } = null!;
+        public TicketReference Reference { get; private set; } = null!;
+        public TicketStatus Status { get; private set; }
+        public DateTimeOffset IssuedAt { get; private set; }
 
         public QRCode? QRCode { get; private set; }
 
@@ -20,33 +23,43 @@ namespace Domain.Aggregates.Ticketing
 
         private Ticket(
             Guid id,
-            TicketReference reference,
             Guid orderId,
-            Guid eventId)
+            Guid eventId,
+            Guid categoryId,
+            PhoneNumber buyerPhone,
+            string buyerName,
+            TicketReference reference)
             : base(id)
         {
-            Reference = reference;
             OrderId = orderId;
             EventId = eventId;
+            CategoryId = categoryId;
+            BuyerPhone = buyerPhone;
+            BuyerName = buyerName;
+            Reference = reference;
+            Status = TicketStatus.Issued;
+            IssuedAt = DateTimeOffset.UtcNow;
         }
 
         public static Ticket Issue(
             TicketReference reference,
             Guid orderId,
-            Guid eventId)
+            Guid eventId,
+            Guid categoryId,
+            PhoneNumber buyerPhone,
+            string buyerName)
         {
-            var ticket = new Ticket(Guid.NewGuid(), reference, orderId, eventId)
-            {
-                IsIssued = true
-            };
+            Guard.Against.Null(buyerPhone, nameof(buyerPhone));
+            Guard.Against.NullOrEmpty(buyerName, nameof(buyerName));
 
+            var ticket = new Ticket(Guid.NewGuid(), orderId, eventId, categoryId, buyerPhone, buyerName, reference);
             ticket.RaiseEvent(new TicketIssued(ticket.Id, reference));
             return ticket;
         }
 
         public void AttachQrCode(QRCodePayload payload)
         {
-            if (!IsIssued)
+            if (Status != TicketStatus.Issued)
             {
                 throw new BusinessRuleValidationException("Ticket.NotIssued",
                     "Un QR code ne peut être généré que pour un ticket émis.");
@@ -58,33 +71,33 @@ namespace Domain.Aggregates.Ticketing
 
         public void MarkDelivered()
         {
-            if (!IsIssued) return;
+            if (Status != TicketStatus.Issued) return;
             RaiseEvent(new TicketDelivered(Id));
         }
 
         public void Revoke()
         {
-            if (IsRevoked) return;
+            if (Status == TicketStatus.Revoked) return;
 
-            IsRevoked = true;
+            Status = TicketStatus.Revoked;
             RaiseEvent(new TicketRevoked(Id));
         }
 
         public void MarkUsed()
         {
-            if (IsRevoked)
+            if (Status == TicketStatus.Revoked)
             {
                 throw new BusinessRuleValidationException("Ticket.RevokedCannotBeUsed",
                     "Un ticket révoqué ne peut plus être scanné.");
             }
 
-            if (IsUsed)
+            if (Status == TicketStatus.Used)
             {
                 throw new BusinessRuleValidationException("Ticket.AlreadyUsed",
                     "Un ticket ne peut être scanné qu'une seule fois.");
             }
 
-            IsUsed = true;
+            Status = TicketStatus.Used;
         }
     }
 
@@ -92,20 +105,24 @@ namespace Domain.Aggregates.Ticketing
     {
         public Guid TicketId { get; private set; }
         public QRCodePayload Payload { get; private set; } = null!;
+        public DateTimeOffset GeneratedAt { get; private set; }
+        public DateTimeOffset? ExpiresAt { get; private set; }
 
         // EF
         private QRCode() { }
 
-        private QRCode(Guid id, Guid ticketId, QRCodePayload payload)
+        private QRCode(Guid id, Guid ticketId, QRCodePayload payload, DateTimeOffset? expiresAt = null)
             : base(id)
         {
             TicketId = ticketId;
             Payload = payload;
+            GeneratedAt = DateTimeOffset.UtcNow;
+            ExpiresAt = expiresAt;
         }
 
-        public static QRCode Create(Guid ticketId, QRCodePayload payload)
+        public static QRCode Create(Guid ticketId, QRCodePayload payload, DateTimeOffset? expiresAt = null)
         {
-            return new QRCode(Guid.NewGuid(), ticketId, payload);
+            return new QRCode(Guid.NewGuid(), ticketId, payload, expiresAt);
         }
     }
 }

@@ -1,4 +1,5 @@
 using Domain.Aggregates.Sales;
+using Domain.Enums;
 using Domain.ValueObjects;
 using Domain.ValueObjects.Identities;
 using Microsoft.EntityFrameworkCore;
@@ -20,20 +21,41 @@ namespace Infrastructure.Persistences.Configurations
                     value => OrderId.From(value))
                 .HasColumnName("Id");
 
+            builder.Property(o => o.BuyerPhone)
+                .HasConversion(
+                    p => p.Value,
+                    value => new PhoneNumber(value))
+                .HasMaxLength(20)
+                .IsRequired();
+
+            builder.Property(o => o.CategoryId);
+            builder.Property(o => o.EventId);
+            builder.Property(o => o.PromoCodeId);
+            builder.Property(o => o.Quantity);
+
+            builder.OwnsOne(o => o.Subtotal, money =>
+            {
+                money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("Subtotal_Amount").IsRequired();
+                money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("Subtotal_Currency").IsRequired();
+            });
+
+            builder.OwnsOne(o => o.Fees, money =>
+            {
+                money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("Fees_Amount").IsRequired();
+                money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("Fees_Currency").IsRequired();
+            });
+
             builder.OwnsOne(o => o.Total, money =>
             {
                 money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("Total_Amount").IsRequired();
                 money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("Total_Currency").IsRequired();
             });
 
-            builder.OwnsOne(o => o.ServiceFee, money =>
-            {
-                money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("ServiceFee_Amount").IsRequired();
-                money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("ServiceFee_Currency").IsRequired();
-            });
-
             builder.Property(o => o.Status)
                 .HasConversion<int>();
+
+            builder.Property(o => o.ReservedUntil);
+            builder.Property(o => o.CreatedAt);
 
             builder.HasOne(o => o.Payment)
                 .WithOne()
@@ -74,8 +96,11 @@ namespace Infrastructure.Persistences.Configurations
                     value => OrderId.From(value))
                 .IsRequired();
 
-            builder.Property(i => i.Sku)
-                .HasMaxLength(100)
+            builder.Property(i => i.TicketRef)
+                .HasConversion(
+                    r => r.Value,
+                    value => TicketReference.From(value))
+                .HasMaxLength(50)
                 .IsRequired();
 
             builder.Property(i => i.Quantity);
@@ -104,11 +129,14 @@ namespace Infrastructure.Persistences.Configurations
                     value => OrderId.From(value))
                 .IsRequired();
 
-            builder.Property(p => p.Method)
+            builder.Property(p => p.Provider)
+                .HasConversion<int>();
+
+            builder.Property(p => p.PhoneNumber)
                 .HasConversion(
-                    m => m.Value,
-                    value => PaymentMethod.From(value))
-                .HasMaxLength(50)
+                    ph => ph.Value,
+                    value => new PhoneNumber(value))
+                .HasMaxLength(20)
                 .IsRequired();
 
             builder.Property(p => p.TransactionId)
@@ -126,6 +154,9 @@ namespace Infrastructure.Persistences.Configurations
 
             builder.Property(p => p.Status)
                 .HasConversion<int>();
+
+            builder.Property(p => p.InitiatedAt);
+            builder.Property(p => p.ConfirmedAt);
 
             builder.Property(p => p.FailureReason)
                 .HasMaxLength(500);
@@ -146,13 +177,21 @@ namespace Infrastructure.Persistences.Configurations
                     value => OrderId.From(value))
                 .IsRequired();
 
+            builder.Property(r => r.PaymentId);
+
             builder.OwnsOne(r => r.Amount, money =>
             {
                 money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("Amount_Amount").IsRequired();
                 money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("Amount_Currency").IsRequired();
             });
 
-            builder.Property(r => r.CreatedAt);
+            builder.Property(r => r.Reason)
+                .HasMaxLength(500);
+
+            builder.Property(r => r.Status)
+                .HasConversion<int>();
+
+            builder.Property(r => r.ProcessedAt);
         }
     }
 }

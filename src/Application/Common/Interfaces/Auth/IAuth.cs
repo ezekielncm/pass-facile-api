@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+namespace Application.Common.Interfaces.Auth;
 
-namespace Application.Common.Interfaces.Auth
+public interface IAuth
 {
-    public interface IAuth
-    {
-        //Task<(bool Success, string? Token, string? Error)> LoginAsync(string email, string password, CancellationToken cancellationToken = default);
-        //Task<(bool Success, string? Error)> RegisterAsync(string email, string password, string firstName, string lastName, string role, CancellationToken cancellationToken = default);
-        //Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default);
-        //Task<bool> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken = default);
-        //Task<string> GeneratePasswordResetTokenAsync(string email, CancellationToken cancellationToken = default);
-        Task<(bool Success, string? Error)> RequestOtpAsync(string phoneNumber);
-        Task<(bool Success, string? Token, string? Error)> VerifyOtpAsync(string phoneNumber, string otp);
-        //Task<(bool Success, string? AccessToken, string? RefreshToken, string? Error)> RefreshTokenAsync(string refreshToken);
-    }
+    Task<(bool Success, string? OtpId, DateTimeOffset? ExpiresAt, string? Error)> RequestOtpAsync(string phoneNumber);
+    Task<(bool Success, string? AccessToken, string? RefreshToken, string? Error)> VerifyOtpAsync(string phoneNumber, string otp, string deviceId);
+    Task<(bool Success, string? AccessToken, string? RefreshToken, string? Error)> RefreshTokenAsync(string refreshToken);
 }

@@ -39,7 +39,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Contracts\Categories\" />
+    <Folder Include="Contracts\Dashboard\" />
+    <Folder Include="Contracts\Finance\" />
+    <Folder Include="Contracts\Media\" />
+    <Folder Include="Contracts\Notifications\" />
+    <Folder Include="Contracts\Orders\" />
     <Folder Include="Contracts\Organizers\" />
+    <Folder Include="Contracts\Scan\" />
+    <Folder Include="Contracts\Tickets\" />
   </ItemGroup>
 	<PropertyGroup>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

@@ -9,6 +9,7 @@
   <ItemGroup>
     <Folder Include="Auth\Commands\Login\" />
     <Folder Include="Auth\Commands\Register\" />
+    <Folder Include="Categories\" />
   </ItemGroup>
 
   <ItemGroup>

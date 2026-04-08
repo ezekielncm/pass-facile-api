@@ -2,9 +2,10 @@ namespace Domain.ValueObjects
 {
     public enum WithdrawalStatus
     {
-        Pending = 0,
-        Processed = 1,
-        Failed = 2
+        Requested = 0,
+        Processing = 1,
+        Completed = 2,
+        Failed = 3
     }
 }
 

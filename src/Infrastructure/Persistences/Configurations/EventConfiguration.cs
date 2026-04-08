@@ -1,4 +1,5 @@
 using Domain.Aggregates.Event;
+using Domain.Enums;
 using Domain.ValueObjects;
 using Domain.ValueObjects.Identities;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,8 @@ namespace Infrastructure.Persistences.Configurations
                     value => EventId.From(value))
                 .HasColumnName("Id");
 
+            builder.Property(e => e.OrganizerId);
+
             builder.Property(e => e.Slug)
                 .HasConversion(
                     s => s.Value,
@@ -33,16 +36,15 @@ namespace Infrastructure.Persistences.Configurations
             builder.OwnsOne(e => e.Venue, venue =>
             {
                 venue.Property(v => v.Name).HasMaxLength(200).IsRequired().HasColumnName("Venue_Name");
-                venue.Property(v => v.AddressLine1).HasMaxLength(300).IsRequired().HasColumnName("Venue_AddressLine1");
-                venue.Property(v => v.AddressLine2).HasMaxLength(300).HasColumnName("Venue_AddressLine2");
+                venue.Property(v => v.Address).HasMaxLength(500).IsRequired().HasColumnName("Venue_Address");
                 venue.Property(v => v.City).HasMaxLength(100).IsRequired().HasColumnName("Venue_City");
-                venue.Property(v => v.Country).HasMaxLength(100).IsRequired().HasColumnName("Venue_Country");
+                venue.Property(v => v.GpsCoordinates).HasMaxLength(100).HasColumnName("Venue_GpsCoordinates");
             });
 
             builder.OwnsOne(e => e.SalesPeriod, sp =>
             {
                 sp.Property(s => s.StartDate).HasColumnName("SalesPeriod_StartDate").IsRequired();
-                sp.Property(s => s.EndDate).HasColumnName("SalesPeriod_EndDate").IsRequired();
+                sp.Property(s => s.EndDate).HasColumnName("SalesPeriod_EndDate");
             });
 
             builder.Property(e => e.Capacity)
@@ -51,9 +53,13 @@ namespace Infrastructure.Persistences.Configurations
                     value => Capacity.From(value))
                 .HasColumnName("Capacity");
 
-            builder.Property(e => e.EventDate);
-            builder.Property(e => e.IsPublished);
-            builder.Property(e => e.SalesClosed);
+            builder.Property(e => e.StartDate);
+            builder.Property(e => e.EndDate);
+            builder.Property(e => e.Status)
+                .HasConversion<int>();
+            builder.Property(e => e.CreatedAt);
+
+            builder.Ignore(e => e.IsPublished);
 
             builder.HasMany(e => e.Categories)
                 .WithOne()
@@ -93,11 +99,19 @@ namespace Infrastructure.Persistences.Configurations
                 .HasMaxLength(100)
                 .IsRequired();
 
-            builder.Property(c => c.Price)
-                .HasPrecision(18, 2);
+            builder.OwnsOne(c => c.Price, money =>
+            {
+                money.Property(m => m.Amount).HasPrecision(18, 2).HasColumnName("Price_Amount").IsRequired();
+                money.Property(m => m.Currency).HasMaxLength(5).HasColumnName("Price_Currency").IsRequired();
+            });
 
             builder.Property(c => c.Quota);
+            builder.Property(c => c.SoldCount);
+            builder.Property(c => c.FeePolicy)
+                .HasConversion<int>();
             builder.Property(c => c.IsActive);
+            builder.Property(c => c.Description)
+                .HasMaxLength(500);
         }
     }
 
@@ -122,9 +136,14 @@ namespace Infrastructure.Persistences.Configurations
             builder.HasIndex(p => new { p.EventId, p.Code })
                 .IsUnique();
 
-            builder.Property(p => p.DiscountAmount)
+            builder.Property(p => p.DiscountType)
+                .HasConversion<int>();
+
+            builder.Property(p => p.Value)
                 .HasPrecision(18, 2);
 
+            builder.Property(p => p.MaxUses);
+            builder.Property(p => p.UsedCount);
             builder.Property(p => p.ExpiresAt);
             builder.Property(p => p.IsActive);
         }

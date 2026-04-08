@@ -1,4 +1,5 @@
 using Domain.Aggregates.AccessControl;
+using Domain.Enums;
 using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -23,9 +24,8 @@ namespace Infrastructure.Persistences.Configurations
                 .HasMaxLength(200)
                 .IsRequired();
 
+            builder.Property(s => s.StartedAt);
             builder.Property(s => s.IsOffline);
-            builder.Property(s => s.CreatedAt);
-            builder.Property(s => s.SyncedAt);
 
             builder.HasMany(s => s.Events)
                 .WithOne()
@@ -46,16 +46,21 @@ namespace Infrastructure.Persistences.Configurations
             builder.HasKey(e => e.Id);
 
             builder.Property(e => e.ScanSessionId);
-            builder.Property(e => e.TicketId);
 
-            builder.Property(e => e.Result)
-                .HasConversion(
-                    r => r.Value,
-                    value => ScanResult.From(value))
-                .HasMaxLength(50)
+            builder.Property(e => e.QrPayload)
+                .HasMaxLength(2000)
                 .IsRequired();
 
+            builder.OwnsOne(e => e.Result, r =>
+            {
+                r.Property(x => x.Status).HasConversion<int>().HasColumnName("Result_Status").IsRequired();
+                r.Property(x => x.TicketRef).HasMaxLength(100).HasColumnName("Result_TicketRef");
+                r.Property(x => x.Category).HasMaxLength(100).HasColumnName("Result_Category");
+                r.Property(x => x.Message).HasMaxLength(500).HasColumnName("Result_Message").IsRequired();
+            });
+
             builder.Property(e => e.ScannedAt);
+            builder.Property(e => e.SyncedAt);
         }
     }
 }

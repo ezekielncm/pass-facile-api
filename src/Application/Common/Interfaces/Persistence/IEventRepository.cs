@@ -10,6 +10,8 @@ namespace Application.Common.Interfaces.Persistence
     {
         Task<Event?> GetByIdAsync(EventId id, CancellationToken cancellationToken = default);
         Task<Event?> GetBySlugAsync(EventSlug slug, CancellationToken cancellationToken = default);
+        Task<List<Event>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<List<Event>> GetByOrganizerIdAsync(Guid organizerId, CancellationToken cancellationToken = default);
 
         Task AddAsync(Event @event, CancellationToken cancellationToken = default);
 
