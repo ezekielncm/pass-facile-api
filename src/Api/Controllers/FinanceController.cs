@@ -1,5 +1,6 @@
-﻿using Application.Tickets.Queries.GetTicketQr;
-using Application.Tickets.Queries.GetTicketsByPhone;
+using Api.Contracts.Finance;
+using Application.Finance.Commands.RequestWithdrawal;
+using Application.Finance.Queries.GetWallet;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,27 +9,24 @@ namespace Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-    public class TicketsController : ControllerBase
+    [Authorize(Policy = "OrganisateurOnly")]
+    public class FinanceController : ControllerBase
     {
         private readonly IMediator _mediator;
 
-        public TicketsController(IMediator mediator)
+        public FinanceController(IMediator mediator)
         {
             _mediator = mediator;
         }
 
         /// <summary>
-        /// Récupère le QR code d'un ticket.
+        /// Récupère le portefeuille de l'organisateur connecté (solde, transactions).
         /// </summary>
-        [HttpGet("{id:guid}/qr")]
+        [HttpGet("wallet")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetTicketQr(
-            Guid id,
-            [FromQuery] string format = "png")
+        public async Task<IActionResult> GetWallet()
         {
-            var query = new GetTicketQrQuery(id, format);
+            var query = new GetWalletQuery();
             var result = await _mediator.Send(query, CancellationToken.None);
 
             return result.Match<IActionResult>(
@@ -41,19 +39,22 @@ namespace Api.Controllers
         }
 
         /// <summary>
-        /// Récupère les tickets d'un utilisateur via son numéro de téléphone.
+        /// Demande un retrait de fonds vers un compte de paiement mobile.
         /// </summary>
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPost("withdrawals")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetTicketsByPhone(
-            [FromQuery] string phone)
+        public async Task<IActionResult> RequestWithdrawal(
+            [FromBody] RequestWithdrawalRequest request)
         {
-            var query = new GetTicketsByPhoneQuery(phone);
-            var result = await _mediator.Send(query, CancellationToken.None);
+            var cmd = new RequestWithdrawalCommand(
+                request.Amount,
+                request.AccountId);
+
+            var result = await _mediator.Send(cmd, CancellationToken.None);
 
             return result.Match<IActionResult>(
-                onSuccess: dto => Ok(dto),
+                onSuccess: dto => Created($"api/finance/withdrawals/{dto.Id}", dto),
                 onFailure: error => error.Code switch
                 {
                     var c when c.Contains("NotFound") => NotFound(error),
