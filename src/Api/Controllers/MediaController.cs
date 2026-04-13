@@ -21,7 +21,7 @@ namespace Api.Controllers
         /// Upload un fichier média (image de couverture, logo, bannière, etc.).
         /// </summary>
         [Authorize(Policy = "OrganisateurOnly")]
-        [HttpPost]
+        [HttpPost("upload")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

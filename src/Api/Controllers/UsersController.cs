@@ -11,7 +11,7 @@ namespace Api.Controllers
     [Route("api/[Controller]")]
     [ApiController]
     [Authorize]
-    public class UsersController : Controller
+    public class UsersController : ControllerBase
     {
         private readonly ILogger<UsersController> _logger;
         private readonly IMediator _mediator;
@@ -56,7 +56,7 @@ namespace Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdatePaymentAccounts(
-            [FromBody] paymentAccountsRequest request)
+            [FromBody] PaymentAccountsRequest request)
         {
             var cmd = new UpdatePaymentAccountsCommand(
                 request.OrangeMoney,

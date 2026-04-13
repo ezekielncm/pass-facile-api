@@ -1,7 +1,6 @@
 ﻿using Api.Contracts.Orders;
 using Application.Orders.Commands.CreateOrder;
 using Application.Orders.Commands.InitiatePayment;
-using Application.Orders.Commands.PaymentWebhook;
 using Application.Orders.Commands.RefundOrder;
 using Application.Orders.Queries.GetOrderStatus;
 using MediatR;
@@ -26,6 +25,7 @@ namespace Api.Controllers
         /// Crée une nouvelle commande pour acheter des tickets.
         /// </summary>
         [HttpPost]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateOrder(
@@ -52,6 +52,7 @@ namespace Api.Controllers
         /// Récupère le statut d'une commande avec les tickets associés.
         /// </summary>
         [HttpGet("{id:guid}")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetOrderStatus(Guid id)
@@ -71,7 +72,7 @@ namespace Api.Controllers
         /// <summary>
         /// Initie un paiement mobile pour une commande existante.
         /// </summary>
-        [HttpPost("{id:guid}/payments")]
+        [HttpPost("{id:guid}/initiate-payment")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -96,33 +97,10 @@ namespace Api.Controllers
         }
 
         /// <summary>
-        /// Webhook appelé par le fournisseur de paiement pour confirmer le statut.
-        /// </summary>
-        [HttpPost("webhooks/payment")]
-        [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> PaymentWebhook(
-            [FromBody] PaymentWebhookRequest request)
-        {
-            var cmd = new PaymentWebhookCommand(
-                request.TransactionId,
-                request.Status,
-                request.FailureReason,
-                request.Signature);
-
-            var result = await _mediator.Send(cmd, CancellationToken.None);
-
-            return result.Match<IActionResult>(
-                onSuccess: _ => Ok(),
-                onFailure: error => BadRequest(new { error.Code, error.Message }));
-        }
-
-        /// <summary>
         /// Demande un remboursement pour une commande.
         /// </summary>
         [Authorize(Policy = "OrganisateurOnly")]
-        [HttpPost("{id:guid}/refunds")]
+        [HttpPost("{id:guid}/refund")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
