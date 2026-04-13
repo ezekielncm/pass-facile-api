@@ -31,8 +31,8 @@ namespace Api.Controllers
         public async Task<IActionResult> RequestOtp(
             [FromBody] SendOtpRequest request)
         {
-            var commad = new RequestOtpCommand(request.PhoneNumber);
-            var result = await _mediator.Send(commad,CancellationToken.None);
+            var command = new RequestOtpCommand(request.PhoneNumber);
+            var result = await _mediator.Send(command, CancellationToken.None);
             return result.Match<IActionResult>(
                 onSuccess: Response => Ok(Response),
                 onFailure: error => error.Code switch
@@ -68,8 +68,8 @@ namespace Api.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost("refresh")]
-        [Authorize]
-        public async Task<IActionResult> refresh(
+        [AllowAnonymous]
+        public async Task<IActionResult> Refresh(
             [FromBody] RefreshRequest request)
         {
             var command = new RefreshTokenCommand(request.RefreshToken);

@@ -1,4 +1,6 @@
 ﻿using Api.Contracts.Events;
+using Api.Contracts.Notifications;
+using Api.Contracts.Scan;
 using Application.Events.Commands.CreatePromoCode;
 using Application.Events.Commands.DuplicateEvent;
 using Application.Events.Commands.PatchEvent;
@@ -6,7 +8,11 @@ using Application.Events.Commands.PostEvent;
 using Application.Events.Commands.PostTicketCategories;
 using Application.Events.Commands.UpdateEvent;
 using Application.Events.Queries.GetEventPublish;
-using Application.Events.Queries.GetEvents;
+using Application.Notifications.Commands.SendReminder;
+using Application.Scan.Commands.AssignAgent;
+using Application.Scan.Commands.RevokeAgent;
+using Application.Scan.Queries.GetAttendance;
+using Application.Scan.Queries.GetOfflineBundle;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,23 +31,6 @@ namespace Api.Controllers
         {
             _logger = logger;
             _mediator = mediator;
-        }
-
-        /// <summary>Récupère la liste des événements de l'organisateur connecté.</summary>
-        [Authorize(Policy = "OrganisateurOnly")]
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetEvents(
-            [FromQuery] string? status,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20)
-        {
-            var query = new GetEventsQuery(status, page, pageSize);
-            var result = await _mediator.Send(query, CancellationToken.None);
-
-            return result.Match<IActionResult>(
-                onSuccess: dto => Ok(dto),
-                onFailure: error => BadRequest(new { error.Code, error.Message }));
         }
 
         /// <summary>Crée un nouvel événement (brouillon).</summary>
@@ -226,6 +215,123 @@ namespace Api.Controllers
 
             return result.Match<IActionResult>(
                 onSuccess: dto => Created($"api/events/{id}/promo-codes/{dto.Id}", dto),
+                onFailure: error => error.Code switch
+                {
+                    var c when c.Contains("NotFound") => NotFound(error),
+                    _ => BadRequest(new { error.Code, error.Message })
+                });
+        }
+
+        /// <summary>
+        /// Assigne un agent de scan à un événement.
+        /// </summary>
+        [Authorize(Policy = "OrganisateurOnly")]
+        [HttpPost("{eventId:guid}/agents")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> AssignAgent(
+            Guid eventId,
+            [FromBody] AssignAgentRequest request)
+        {
+            var cmd = new AssignAgentCommand(eventId, request.AgentPhone);
+            var result = await _mediator.Send(cmd, CancellationToken.None);
+
+            return result.Match<IActionResult>(
+                onSuccess: dto => Created($"api/events/{eventId}/agents/{dto.AgentId}", dto),
+                onFailure: error => error.Code switch
+                {
+                    var c when c.Contains("NotFound") => NotFound(error),
+                    _ => BadRequest(new { error.Code, error.Message })
+                });
+        }
+
+        /// <summary>
+        /// Révoque un agent de scan d'un événement.
+        /// </summary>
+        [Authorize(Policy = "OrganisateurOnly")]
+        [HttpDelete("{eventId:guid}/agents/{agentId:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RevokeAgent(
+            Guid eventId,
+            Guid agentId)
+        {
+            var cmd = new RevokeAgentCommand(eventId, agentId);
+            var result = await _mediator.Send(cmd, CancellationToken.None);
+
+            return result.Match<IActionResult>(
+                onSuccess: _ => NoContent(),
+                onFailure: error => error.Code switch
+                {
+                    var c when c.Contains("NotFound") => NotFound(error),
+                    _ => BadRequest(new { error.Code, error.Message })
+                });
+        }
+
+        /// <summary>
+        /// Récupère le bundle de tickets pour le scan hors-ligne.
+        /// </summary>
+        [Authorize(Policy = "AgentOnly")]
+        [HttpGet("{eventId:guid}/offline-bundle")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetOfflineBundle(Guid eventId)
+        {
+            var query = new GetOfflineBundleQuery(eventId);
+            var result = await _mediator.Send(query, CancellationToken.None);
+
+            return result.Match<IActionResult>(
+                onSuccess: dto => Ok(dto),
+                onFailure: error => error.Code switch
+                {
+                    var c when c.Contains("NotFound") => NotFound(error),
+                    _ => BadRequest(new { error.Code, error.Message })
+                });
+        }
+
+        /// <summary>
+        /// Récupère les statistiques de présence d'un événement.
+        /// </summary>
+        [Authorize(Policy = "OrganisateurOnly")]
+        [HttpGet("{eventId:guid}/attendance")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetAttendance(Guid eventId)
+        {
+            var query = new GetAttendanceQuery(eventId);
+            var result = await _mediator.Send(query, CancellationToken.None);
+
+            return result.Match<IActionResult>(
+                onSuccess: dto => Ok(dto),
+                onFailure: error => error.Code switch
+                {
+                    var c when c.Contains("NotFound") => NotFound(error),
+                    _ => BadRequest(new { error.Code, error.Message })
+                });
+        }
+
+        /// <summary>
+        /// Envoie un rappel aux participants d'un événement.
+        /// </summary>
+        [Authorize(Policy = "OrganisateurOnly")]
+        [HttpPost("{id:guid}/notifications/reminder")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SendReminder(
+            Guid id,
+            [FromBody] SendReminderRequest request)
+        {
+            var cmd = new SendReminderCommand(
+                id,
+                request.Message,
+                request.ScheduledAt);
+
+            var result = await _mediator.Send(cmd, CancellationToken.None);
+
+            return result.Match<IActionResult>(
+                onSuccess: dto => Created($"api/events/{id}/notifications/reminder/{dto.JobId}", dto),
                 onFailure: error => error.Code switch
                 {
                     var c when c.Contains("NotFound") => NotFound(error),

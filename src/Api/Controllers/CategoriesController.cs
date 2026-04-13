@@ -22,7 +22,7 @@ namespace Api.Controllers
         /// Met à jour une catégorie de ticket existante (nom, prix, quota, statut actif).
         /// </summary>
         [Authorize(Policy = "OrganisateurOnly")]
-        [HttpPatch("{id:guid}")]
+        [HttpPut("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
