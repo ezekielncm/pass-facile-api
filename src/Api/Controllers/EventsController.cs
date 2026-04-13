@@ -226,19 +226,19 @@ namespace Api.Controllers
         /// Assigne un agent de scan à un événement.
         /// </summary>
         [Authorize(Policy = "OrganisateurOnly")]
-        [HttpPost("{eventId:guid}/agents")]
+        [HttpPost("{id:guid}/agents")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AssignAgent(
-            Guid eventId,
+            Guid id,
             [FromBody] AssignAgentRequest request)
         {
-            var cmd = new AssignAgentCommand(eventId, request.AgentPhone);
+            var cmd = new AssignAgentCommand(id, request.AgentPhone);
             var result = await _mediator.Send(cmd, CancellationToken.None);
 
             return result.Match<IActionResult>(
-                onSuccess: dto => Created($"api/events/{eventId}/agents/{dto.AgentId}", dto),
+                onSuccess: dto => Created($"api/events/{id}/agents/{dto.AgentId}", dto),
                 onFailure: error => error.Code switch
                 {
                     var c when c.Contains("NotFound") => NotFound(error),
@@ -250,14 +250,14 @@ namespace Api.Controllers
         /// Révoque un agent de scan d'un événement.
         /// </summary>
         [Authorize(Policy = "OrganisateurOnly")]
-        [HttpDelete("{eventId:guid}/agents/{agentId:guid}")]
+        [HttpDelete("{id:guid}/agents/{agentId:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RevokeAgent(
-            Guid eventId,
+            Guid id,
             Guid agentId)
         {
-            var cmd = new RevokeAgentCommand(eventId, agentId);
+            var cmd = new RevokeAgentCommand(id, agentId);
             var result = await _mediator.Send(cmd, CancellationToken.None);
 
             return result.Match<IActionResult>(
@@ -273,12 +273,12 @@ namespace Api.Controllers
         /// Récupère le bundle de tickets pour le scan hors-ligne.
         /// </summary>
         [Authorize(Policy = "AgentOnly")]
-        [HttpGet("{eventId:guid}/offline-bundle")]
+        [HttpGet("{id:guid}/offline-bundle")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetOfflineBundle(Guid eventId)
+        public async Task<IActionResult> GetOfflineBundle(Guid id)
         {
-            var query = new GetOfflineBundleQuery(eventId);
+            var query = new GetOfflineBundleQuery(id);
             var result = await _mediator.Send(query, CancellationToken.None);
 
             return result.Match<IActionResult>(
@@ -294,12 +294,12 @@ namespace Api.Controllers
         /// Récupère les statistiques de présence d'un événement.
         /// </summary>
         [Authorize(Policy = "OrganisateurOnly")]
-        [HttpGet("{eventId:guid}/attendance")]
+        [HttpGet("{id:guid}/attendance")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAttendance(Guid eventId)
+        public async Task<IActionResult> GetAttendance(Guid id)
         {
-            var query = new GetAttendanceQuery(eventId);
+            var query = new GetAttendanceQuery(id);
             var result = await _mediator.Send(query, CancellationToken.None);
 
             return result.Match<IActionResult>(
